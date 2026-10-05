@@ -1,0 +1,5 @@
+a :hover { color : red ; }
+.x::before { content: "a, b : c" ; }
+@media (min-width: 600px) {
+  .y { margin : 0 auto ; background: url( "a b.png" ) ; }
+}

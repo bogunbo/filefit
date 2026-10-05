@@ -1,0 +1,48 @@
+name: Self-test live site
+
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: 'Only these types, e.g. pdf,mp4 (empty = all samples)'
+        required: false
+        default: ''
+  schedule:
+    - cron: '23 4 * * 1'   # every Monday
+
+permissions:
+  contents: write
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright (uses the runner's Google Chrome)
+        run: npm install --no-save playwright@1.56.0
+
+      - name: Run self-test in Chrome against the live site
+        run: node tests/selftest.mjs "${{ vars.SITE_URL || 'https://optimize.groundfloorstudio.rs/' }}" "only=${{ inputs.only }}"
+
+      - name: Save report to the repo
+        if: always()
+        run: |
+          git config user.name "omniopti-bot"
+          git config user.email "omniopti-bot@users.noreply.github.com"
+          cp reports/selftest-latest.json "reports/selftest-$(date -u +%Y%m%d-%H%M).json" || true
+          git add reports
+          git diff --cached --quiet || git commit -m "Self-test report $(date -u +%F)"
+          git pull --rebase --autostash && git push
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selftest-report
+          path: reports/selftest-latest.*

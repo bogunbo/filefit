@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+<!ENTITY ns_svg "http://www.w3.org/2000/svg">
+]>
+<svg xmlns="&ns_svg;" viewBox="0 0 24 24">
+  <!-- comment -->
+  <path d="M10.004.5 3.996.25L1.123456 2.987654" transform="scale(0.0048828125)"/>
+  <text x="1">Hello   world</text>
+</svg>

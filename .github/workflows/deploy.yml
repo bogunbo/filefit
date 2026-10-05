@@ -1,0 +1,46 @@
+name: Deploy to website
+
+on:
+  push:
+    branches: [main]
+    paths: ['src/**', 'public/**', 'build.sh']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build & syntax-check
+        run: ./build.sh
+
+      - name: Upload changed files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
+          port: ${{ vars.FTP_PORT || 21 }}
+          server-dir: ${{ vars.FTP_SERVER_DIR }}
+          local-dir: ./public/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            diag/data/**
+
+  selftest:
+    needs: deploy
+    uses: ./.github/workflows/selftest.yml

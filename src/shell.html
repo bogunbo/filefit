@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniOpti — File Optimizer</title>
+    <meta name="description" content="Compress images, video, audio, PDFs, Blender files and more — 100% in your browser.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#eef2ff', 100: '#e0e7ff', 400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 900: '#312e81' },
+                        darkbg: '#0b0f17',
+                        darkcard: '#131926',
+                        darkborder: '#1f293d'
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1f293d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #374151; }
+
+        body {
+            background:
+                radial-gradient(1200px 600px at 50% -10%, rgba(99,102,241,0.14), transparent 60%),
+                #0b0f17;
+        }
+        .glass-panel {
+            background: rgba(19, 25, 38, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.5); }
+        }
+        .dropzone-active {
+            animation: pulseGlow 2s infinite;
+            border-color: #6366f1 !important;
+            background: rgba(99, 102, 241, 0.08) !important;
+        }
+
+        /* Dialogs (Supported files / Settings / Account) */
+        dialog.sheet {
+            margin: auto;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            width: min(560px, calc(100vw - 32px));
+            max-height: min(80vh, 760px);
+        }
+        dialog.sheet::backdrop { background: rgba(5, 8, 14, 0.7); backdrop-filter: blur(4px); }
+        dialog.sheet[open] { animation: sheetIn .18s ease-out; }
+        @keyframes sheetIn { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+        @media (max-width: 640px) {
+            dialog.sheet { margin: auto 0 0 0; width: 100vw; max-width: 100vw; max-height: 88vh; }
+            dialog.sheet > div { border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+        }
+
+        /* Switch-style checkbox */
+        .switch { appearance: none; width: 36px; height: 20px; border-radius: 999px; background: #1f293d; position: relative; cursor: pointer; transition: background .15s; flex-shrink: 0; }
+        .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #94a3b8; transition: transform .15s, background .15s; }
+        .switch:checked { background: #4f46e5; }
+        .switch:checked::after { transform: translateX(16px); background: #fff; }
+        .switch:focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }
+
+        .queue-scroll { max-height: 46vh; overflow-y: auto; }
+    </style>
+</head>
+<body class="text-slate-200 font-sans min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+    <!-- ===================== Main: upload + optimize only ===================== -->
+    <main class="flex-grow flex items-center justify-center px-4 py-10">
+        <div class="w-full max-w-2xl">
+
+            <div id="dropzone"
+                 class="glass-panel rounded-3xl text-center border-2 border-dashed border-slate-700/80 transition-all cursor-pointer group flex flex-col items-center justify-center p-10 sm:p-14 min-h-[340px] hover:border-brand-500/50">
+                <input type="file" id="fileInput" multiple class="hidden" onchange="handleFileSelect(event)">
+
+                <div id="dzIcon" class="w-20 h-20 mb-6 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <i class="fa-solid fa-cloud-arrow-up text-4xl"></i>
+                </div>
+                <h1 id="dzTitle" class="text-2xl font-semibold text-white mb-2">Drop files to optimize</h1>
+                <p id="dzSub" class="text-sm text-slate-400">or <span class="text-brand-400 font-medium underline-offset-2 group-hover:underline">browse</span><span class="hidden sm:inline"> · paste with Ctrl+V</span></p>
+            </div>
+
+            <!-- Queue (appears only after files are added) -->
+            <section id="queuePanel" class="hidden mt-4 glass-panel rounded-3xl p-3 sm:p-4">
+                <div class="flex items-center justify-between gap-3 px-1 pb-3 mb-2 border-b border-darkborder">
+                    <p id="queueSummary" class="text-xs text-slate-400 truncate"></p>
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <button id="downloadZipBtn" onclick="downloadAllZip()" disabled
+                                class="text-xs font-medium px-3 py-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent">
+                            <i class="fa-solid fa-file-zipper mr-1.5"></i>Download all
+                        </button>
+                        <button id="clearAllBtn" onclick="clearAllFiles()" class="text-xs font-medium px-3 py-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10">
+                            <i class="fa-solid fa-trash-can mr-1.5"></i>Clear
+                        </button>
+                    </div>
+                </div>
+                <div id="fileListContainer" class="queue-scroll space-y-2 pr-1"></div>
+            </section>
+
+            <button id="optimizeAllBtn" onclick="optimizeAllFiles()" disabled
+                    class="mt-4 w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-semibold text-base shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/40 hover:from-emerald-500 hover:to-teal-400 transition-all flex items-center justify-center gap-2.5 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed">
+                <i class="fa-solid fa-bolt"></i> <span id="optimizeLabel">Optimize</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- ===================== Footer: everything else ===================== -->
+    <footer class="border-t border-darkborder bg-darkcard/40 backdrop-blur-md">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/30 flex-shrink-0">
+                    <i class="fa-solid fa-bolt text-sm"></i>
+                </div>
+                <span class="text-sm font-semibold text-white">OmniOpti</span>
+                <span id="testBadge" class="hidden text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded">TEST MODE</span>
+                <span class="hidden md:inline-flex items-center gap-1.5 text-[11px] text-slate-500 ml-2">
+                    <i class="fa-solid fa-shield-halved text-emerald-400/80"></i> Files never leave your browser
+                </span>
+            </div>
+            <nav class="flex items-center gap-1">
+                <button onclick="openSheet('formatsDialog')" class="footer-btn flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" title="Supported files">
+                    <i class="fa-solid fa-list-check"></i><span class="hidden sm:inline">Supported files</span>
+                </button>
+                <button onclick="openSheet('settingsDialog')" class="footer-btn flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" title="Settings">
+                    <i class="fa-solid fa-sliders"></i><span class="hidden sm:inline">Settings</span>
+                    <span id="presetChip" class="text-[10px] font-semibold text-brand-400 bg-brand-500/10 border border-brand-500/20 px-1.5 py-0.5 rounded">Balanced</span>
+                </button>
+                <button onclick="openSheet('accountDialog')" class="footer-btn flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" title="Account">
+                    <i class="fa-solid fa-circle-user"></i><span class="hidden sm:inline">Account</span>
+                </button>
+            </nav>
+        </div>
+    </footer>
+
+    <!-- ===================== Supported files ===================== -->
+    <dialog id="formatsDialog" class="sheet">
+        <div class="glass-panel rounded-3xl flex flex-col max-h-[inherit]" style="background: rgba(19,25,38,.96)">
+            <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-darkborder">
+                <h2 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-list-check text-brand-400"></i> Supported files</h2>
+                <button onclick="closeSheet(this)" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="px-6 py-5 overflow-y-auto space-y-3" id="formatsList"></div>
+        </div>
+    </dialog>
+
+    <!-- ===================== Settings ===================== -->
+    <dialog id="settingsDialog" class="sheet">
+        <div class="glass-panel rounded-3xl flex flex-col max-h-[inherit]" style="background: rgba(19,25,38,.96)">
+            <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-darkborder">
+                <h2 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-sliders text-brand-400"></i> Settings</h2>
+                <button onclick="closeSheet(this)" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="px-6 py-5 overflow-y-auto">
+                <label class="text-xs text-slate-400 font-semibold block mb-2">Compression level</label>
+                <div class="grid grid-cols-3 gap-2 bg-darkbg p-1.5 rounded-xl border border-darkborder">
+                    <button onclick="setPreset('low')" id="preset-low" class="preset-btn py-2 text-xs font-medium rounded-lg">Low</button>
+                    <button onclick="setPreset('balanced')" id="preset-balanced" class="preset-btn py-2 text-xs font-medium rounded-lg">Balanced</button>
+                    <button onclick="setPreset('aggressive')" id="preset-aggressive" class="preset-btn py-2 text-xs font-medium rounded-lg">Aggressive</button>
+                </div>
+                <p id="presetHint" class="text-[11px] text-slate-500 mt-2 min-h-[2.5em]"></p>
+
+                <div class="mt-5 divide-y divide-darkborder">
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Strip metadata</span><span class="block text-[11px] text-slate-500">EXIF, GPS, PDF author info, audio/video tags</span></span>
+                        <input type="checkbox" id="toggleMetadata" class="switch" checked>
+                    </label>
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Convert images to WebP</span><span class="block text-[11px] text-slate-500">Smaller than JPEG/PNG, supported by all modern browsers</span></span>
+                        <input type="checkbox" id="toggleWebP" class="switch" checked>
+                    </label>
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Downscale high-res media</span><span class="block text-[11px] text-slate-500">Images above 4K · video above 1080p (720p on Aggressive) · 3D textures above 2K</span></span>
+                        <input type="checkbox" id="toggleDownscale" class="switch">
+                    </label>
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Optimize video &amp; audio</span><span class="block text-[11px] text-slate-500">Re-encodes with your device's hardware encoder</span></span>
+                        <input type="checkbox" id="toggleMedia" class="switch" checked>
+                    </label>
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Compress .blend, documents &amp; archives</span><span class="block text-[11px] text-slate-500">Blender, Office, design-app packages, 3MF, ZIP, TAR</span></span>
+                        <input type="checkbox" id="toggleTextures" class="switch" checked>
+                    </label>
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Send anonymous diagnostics</span><span class="block text-[11px] text-slate-500">File type, size, result and browser — never file contents or names. Helps fix what doesn’t work.</span></span>
+                        <input type="checkbox" id="toggleDiag" class="switch" checked>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- ===================== Account ===================== -->
+    <dialog id="accountDialog" class="sheet">
+        <div class="glass-panel rounded-3xl flex flex-col max-h-[inherit]" style="background: rgba(19,25,38,.96)">
+            <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-darkborder">
+                <h2 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-circle-user text-brand-400"></i> Account</h2>
+                <button onclick="closeSheet(this)" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="px-6 py-5 overflow-y-auto space-y-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-slate-800 border border-darkborder flex items-center justify-center text-slate-400"><i class="fa-solid fa-user"></i></div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-white">Guest</p>
+                        <p class="text-xs text-slate-500">No sign-up needed — everything runs on this device.</p>
+                    </div>
+                    <button disabled title="Sign-in isn't available yet" class="ml-auto text-xs font-medium px-3 py-2 rounded-lg border border-darkborder text-slate-500 cursor-not-allowed">Sign in</button>
+                </div>
+
+                <div>
+                    <p class="text-[11px] text-slate-500 uppercase font-semibold tracking-wider mb-2">This session</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Files in queue</p><p id="statTotalFiles" class="text-lg font-bold text-white">0</p></div>
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Saved</p><p id="statSavedPercent" class="text-lg font-bold text-brand-400">0%</p></div>
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Original size</p><p id="statOriginalSize" class="text-lg font-bold text-white">0 Bytes</p></div>
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Optimized size</p><p id="statOptimizedSize" class="text-lg font-bold text-emerald-400">0 Bytes</p></div>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-[11px] text-slate-500 uppercase font-semibold tracking-wider mb-2">All time on this device</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Files optimized</p><p id="lifeFiles" class="text-lg font-bold text-white">0</p></div>
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Space saved</p><p id="lifeSaved" class="text-lg font-bold text-emerald-400">0 Bytes</p></div>
+                    </div>
+                    <button onclick="resetLifetime()" class="mt-2 text-[11px] text-slate-500 hover:text-rose-400">Reset stats</button>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-[11px] text-slate-500 uppercase font-semibold tracking-wider">Activity log · <span id="diagCount">0</span> files</p>
+                        <div class="flex items-center gap-3">
+                            <a href="diag/log.php" target="_blank" rel="noopener" class="text-[11px] text-brand-400 hover:underline">All results</a>
+                            <button onclick="exportDiagLog()" class="text-[11px] text-brand-400 hover:underline">Export</button>
+                        </div>
+                    </div>
+                    <div id="diagList" class="bg-darkbg/70 border border-darkborder rounded-xl px-3 py-1 max-h-56 overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 translate-y-6 opacity-0 pointer-events-none transition-all duration-300 z-50 glass-panel px-4 py-3 rounded-xl flex items-center gap-3 border border-brand-500/30 text-sm font-medium text-white shadow-2xl">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toastMsg"></span>
+    </div>
+

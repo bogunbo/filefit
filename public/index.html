@@ -1,0 +1,2250 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniOpti — File Optimizer</title>
+    <meta name="description" content="Compress images, video, audio, PDFs, Blender files and more — 100% in your browser.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#eef2ff', 100: '#e0e7ff', 400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 900: '#312e81' },
+                        darkbg: '#0b0f17',
+                        darkcard: '#131926',
+                        darkborder: '#1f293d'
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1f293d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #374151; }
+
+        body {
+            background:
+                radial-gradient(1200px 600px at 50% -10%, rgba(99,102,241,0.14), transparent 60%),
+                #0b0f17;
+        }
+        .glass-panel {
+            background: rgba(19, 25, 38, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.5); }
+        }
+        .dropzone-active {
+            animation: pulseGlow 2s infinite;
+            border-color: #6366f1 !important;
+            background: rgba(99, 102, 241, 0.08) !important;
+        }
+
+        /* Dialogs (Supported files / Settings / Account) */
+        dialog.sheet {
+            margin: auto;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            width: min(560px, calc(100vw - 32px));
+            max-height: min(80vh, 760px);
+        }
+        dialog.sheet::backdrop { background: rgba(5, 8, 14, 0.7); backdrop-filter: blur(4px); }
+        dialog.sheet[open] { animation: sheetIn .18s ease-out; }
+        @keyframes sheetIn { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+        @media (max-width: 640px) {
+            dialog.sheet { margin: auto 0 0 0; width: 100vw; max-width: 100vw; max-height: 88vh; }
+            dialog.sheet > div { border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+        }
+
+        /* Switch-style checkbox */
+        .switch { appearance: none; width: 36px; height: 20px; border-radius: 999px; background: #1f293d; position: relative; cursor: pointer; transition: background .15s; flex-shrink: 0; }
+        .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #94a3b8; transition: transform .15s, background .15s; }
+        .switch:checked { background: #4f46e5; }
+        .switch:checked::after { transform: translateX(16px); background: #fff; }
+        .switch:focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }
+
+        .queue-scroll { max-height: 46vh; overflow-y: auto; }
+    </style>
+</head>
+<body class="text-slate-200 font-sans min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+    <!-- ===================== Main: upload + optimize only ===================== -->
+    <main class="flex-grow flex items-center justify-center px-4 py-10">
+        <div class="w-full max-w-2xl">
+
+            <div id="dropzone"
+                 class="glass-panel rounded-3xl text-center border-2 border-dashed border-slate-700/80 transition-all cursor-pointer group flex flex-col items-center justify-center p-10 sm:p-14 min-h-[340px] hover:border-brand-500/50">
+                <input type="file" id="fileInput" multiple class="hidden" onchange="handleFileSelect(event)">
+
+                <div id="dzIcon" class="w-20 h-20 mb-6 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <i class="fa-solid fa-cloud-arrow-up text-4xl"></i>
+                </div>
+                <h1 id="dzTitle" class="text-2xl font-semibold text-white mb-2">Drop files to optimize</h1>
+                <p id="dzSub" class="text-sm text-slate-400">or <span class="text-brand-400 font-medium underline-offset-2 group-hover:underline">browse</span><span class="hidden sm:inline"> · paste with Ctrl+V</span></p>
+            </div>
+
+            <!-- Queue (appears only after files are added) -->
+            <section id="queuePanel" class="hidden mt-4 glass-panel rounded-3xl p-3 sm:p-4">
+                <div class="flex items-center justify-between gap-3 px-1 pb-3 mb-2 border-b border-darkborder">
+                    <p id="queueSummary" class="text-xs text-slate-400 truncate"></p>
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <button id="downloadZipBtn" onclick="downloadAllZip()" disabled
+                                class="text-xs font-medium px-3 py-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent">
+                            <i class="fa-solid fa-file-zipper mr-1.5"></i>Download all
+                        </button>
+                        <button id="clearAllBtn" onclick="clearAllFiles()" class="text-xs font-medium px-3 py-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10">
+                            <i class="fa-solid fa-trash-can mr-1.5"></i>Clear
+                        </button>
+                    </div>
+                </div>
+                <div id="fileListContainer" class="queue-scroll space-y-2 pr-1"></div>
+            </section>
+
+            <button id="optimizeAllBtn" onclick="optimizeAllFiles()" disabled
+                    class="mt-4 w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-semibold text-base shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/40 hover:from-emerald-500 hover:to-teal-400 transition-all flex items-center justify-center gap-2.5 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed">
+                <i class="fa-solid fa-bolt"></i> <span id="optimizeLabel">Optimize</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- ===================== Footer: everything else ===================== -->
+    <footer class="border-t border-darkborder bg-darkcard/40 backdrop-blur-md">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/30 flex-shrink-0">
+                    <i class="fa-solid fa-bolt text-sm"></i>
+                </div>
+                <span class="text-sm font-semibold text-white">OmniOpti</span>
+                <span id="testBadge" class="hidden text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded">TEST MODE</span>
+                <span class="hidden md:inline-flex items-center gap-1.5 text-[11px] text-slate-500 ml-2">
+                    <i class="fa-solid fa-shield-halved text-emerald-400/80"></i> Files never leave your browser
+                </span>
+            </div>
+            <nav class="flex items-center gap-1">
+                <button onclick="openSheet('formatsDialog')" class="footer-btn flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" title="Supported files">
+                    <i class="fa-solid fa-list-check"></i><span class="hidden sm:inline">Supported files</span>
+                </button>
+                <button onclick="openSheet('settingsDialog')" class="footer-btn flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" title="Settings">
+                    <i class="fa-solid fa-sliders"></i><span class="hidden sm:inline">Settings</span>
+                    <span id="presetChip" class="text-[10px] font-semibold text-brand-400 bg-brand-500/10 border border-brand-500/20 px-1.5 py-0.5 rounded">Balanced</span>
+                </button>
+                <button onclick="openSheet('accountDialog')" class="footer-btn flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors" title="Account">
+                    <i class="fa-solid fa-circle-user"></i><span class="hidden sm:inline">Account</span>
+                </button>
+            </nav>
+        </div>
+    </footer>
+
+    <!-- ===================== Supported files ===================== -->
+    <dialog id="formatsDialog" class="sheet">
+        <div class="glass-panel rounded-3xl flex flex-col max-h-[inherit]" style="background: rgba(19,25,38,.96)">
+            <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-darkborder">
+                <h2 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-list-check text-brand-400"></i> Supported files</h2>
+                <button onclick="closeSheet(this)" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="px-6 py-5 overflow-y-auto space-y-3" id="formatsList"></div>
+        </div>
+    </dialog>
+
+    <!-- ===================== Settings ===================== -->
+    <dialog id="settingsDialog" class="sheet">
+        <div class="glass-panel rounded-3xl flex flex-col max-h-[inherit]" style="background: rgba(19,25,38,.96)">
+            <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-darkborder">
+                <h2 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-sliders text-brand-400"></i> Settings</h2>
+                <button onclick="closeSheet(this)" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="px-6 py-5 overflow-y-auto">
+                <label class="text-xs text-slate-400 font-semibold block mb-2">Compression level</label>
+                <div class="grid grid-cols-3 gap-2 bg-darkbg p-1.5 rounded-xl border border-darkborder">
+                    <button onclick="setPreset('low')" id="preset-low" class="preset-btn py-2 text-xs font-medium rounded-lg">Low</button>
+                    <button onclick="setPreset('balanced')" id="preset-balanced" class="preset-btn py-2 text-xs font-medium rounded-lg">Balanced</button>
+                    <button onclick="setPreset('aggressive')" id="preset-aggressive" class="preset-btn py-2 text-xs font-medium rounded-lg">Aggressive</button>
+                </div>
+                <p id="presetHint" class="text-[11px] text-slate-500 mt-2 min-h-[2.5em]"></p>
+
+                <div class="mt-5 divide-y divide-darkborder">
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Strip metadata</span><span class="block text-[11px] text-slate-500">EXIF, GPS, PDF author info, audio/video tags</span></span>
+                        <input type="checkbox" id="toggleMetadata" class="switch" checked>
+                    </label>
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Convert images to WebP</span><span class="block text-[11px] text-slate-500">Smaller than JPEG/PNG, supported by all modern browsers</span></span>
+                        <input type="checkbox" id="toggleWebP" class="switch" checked>
+                    </label>
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Downscale high-res media</span><span class="block text-[11px] text-slate-500">Images above 4K · video above 1080p (720p on Aggressive) · 3D textures above 2K</span></span>
+                        <input type="checkbox" id="toggleDownscale" class="switch">
+                    </label>
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Optimize video &amp; audio</span><span class="block text-[11px] text-slate-500">Re-encodes with your device's hardware encoder</span></span>
+                        <input type="checkbox" id="toggleMedia" class="switch" checked>
+                    </label>
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Compress .blend, documents &amp; archives</span><span class="block text-[11px] text-slate-500">Blender, Office, design-app packages, 3MF, ZIP, TAR</span></span>
+                        <input type="checkbox" id="toggleTextures" class="switch" checked>
+                    </label>
+                    <label class="flex items-center justify-between gap-4 py-3 cursor-pointer">
+                        <span><span class="block text-sm text-slate-200">Send anonymous diagnostics</span><span class="block text-[11px] text-slate-500">File type, size, result and browser — never file contents or names. Helps fix what doesn’t work.</span></span>
+                        <input type="checkbox" id="toggleDiag" class="switch" checked>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- ===================== Account ===================== -->
+    <dialog id="accountDialog" class="sheet">
+        <div class="glass-panel rounded-3xl flex flex-col max-h-[inherit]" style="background: rgba(19,25,38,.96)">
+            <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-darkborder">
+                <h2 class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-circle-user text-brand-400"></i> Account</h2>
+                <button onclick="closeSheet(this)" class="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="px-6 py-5 overflow-y-auto space-y-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-slate-800 border border-darkborder flex items-center justify-center text-slate-400"><i class="fa-solid fa-user"></i></div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-white">Guest</p>
+                        <p class="text-xs text-slate-500">No sign-up needed — everything runs on this device.</p>
+                    </div>
+                    <button disabled title="Sign-in isn't available yet" class="ml-auto text-xs font-medium px-3 py-2 rounded-lg border border-darkborder text-slate-500 cursor-not-allowed">Sign in</button>
+                </div>
+
+                <div>
+                    <p class="text-[11px] text-slate-500 uppercase font-semibold tracking-wider mb-2">This session</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Files in queue</p><p id="statTotalFiles" class="text-lg font-bold text-white">0</p></div>
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Saved</p><p id="statSavedPercent" class="text-lg font-bold text-brand-400">0%</p></div>
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Original size</p><p id="statOriginalSize" class="text-lg font-bold text-white">0 Bytes</p></div>
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Optimized size</p><p id="statOptimizedSize" class="text-lg font-bold text-emerald-400">0 Bytes</p></div>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-[11px] text-slate-500 uppercase font-semibold tracking-wider mb-2">All time on this device</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Files optimized</p><p id="lifeFiles" class="text-lg font-bold text-white">0</p></div>
+                        <div class="bg-darkbg/70 border border-darkborder rounded-xl p-3"><p class="text-[11px] text-slate-500">Space saved</p><p id="lifeSaved" class="text-lg font-bold text-emerald-400">0 Bytes</p></div>
+                    </div>
+                    <button onclick="resetLifetime()" class="mt-2 text-[11px] text-slate-500 hover:text-rose-400">Reset stats</button>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-[11px] text-slate-500 uppercase font-semibold tracking-wider">Activity log · <span id="diagCount">0</span> files</p>
+                        <div class="flex items-center gap-3">
+                            <a href="diag/log.php" target="_blank" rel="noopener" class="text-[11px] text-brand-400 hover:underline">All results</a>
+                            <button onclick="exportDiagLog()" class="text-[11px] text-brand-400 hover:underline">Export</button>
+                        </div>
+                    </div>
+                    <div id="diagList" class="bg-darkbg/70 border border-darkborder rounded-xl px-3 py-1 max-h-56 overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 translate-y-6 opacity-0 pointer-events-none transition-all duration-300 z-50 glass-panel px-4 py-3 rounded-xl flex items-center gap-3 border border-brand-500/30 text-sm font-medium text-white shadow-2xl">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toastMsg"></span>
+    </div>
+
+    <script>
+        // =====================================================================
+        //  OmniOpti — real, 100% client-side optimization engine
+        // =====================================================================
+
+        // ---------- State ----------
+        let filesQueue = [];
+        let currentPreset = 'balanced'; // 'low' | 'balanced' | 'aggressive'
+        let isBatchRunning = false;
+
+        // Encoder settings per preset
+        const PRESETS = {
+            low:        { jpegQ: 0.90, webpQ: 0.90, pngColors: 0,   maxDim: 3840, svgPrecision: null, pdfJpegQ: 0.85 },
+            balanced:   { jpegQ: 0.78, webpQ: 0.80, pngColors: 256, maxDim: 3840, svgPrecision: 3,    pdfJpegQ: 0.72 },
+            aggressive: { jpegQ: 0.62, webpQ: 0.66, pngColors: 128, maxDim: 2560, svgPrecision: 2,    pdfJpegQ: 0.58 }
+        };
+        const PRESET_HINTS = {
+            low: 'Near-lossless. Images ~90% quality, PDF images 300 dpi, audio 192 kbps, high-bitrate video.',
+            balanced: 'Recommended. Visually identical for most uses — images ~80%, PDF 150 dpi, audio 128 kbps.',
+            aggressive: 'Smallest files. Visible softening possible — images ~65%, PDF 100 dpi, audio 96 kbps, low-bitrate video.'
+        };
+
+        // Libraries are lazy-loaded only when a file needs them.
+        // Each tries a copy in ./lib/ next to this page first (fast, works offline), then the CDN.
+        const LIBS = {
+            pdflib:     { srcs: ['lib/pdf-lib.min.js', 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'], global: 'PDFLib' },
+            pako:       { srcs: ['lib/pako.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js'], global: 'pako' },
+            upng:       { srcs: ['lib/UPNG.js', 'https://cdn.jsdelivr.net/npm/upng-js@2.1.0/UPNG.js'], global: 'UPNG', deps: ['pako'] },
+            sourcemap:  { srcs: ['lib/source-map.js', 'https://cdn.jsdelivr.net/npm/source-map@0.7.3/dist/source-map.js'], global: 'sourceMap' },
+            terser:     { srcs: ['lib/terser.min.js', 'https://cdn.jsdelivr.net/npm/terser@5.31.0/dist/bundle.min.js'], global: 'Terser', deps: ['sourcemap'] },
+            mediabunny: { srcs: ['lib/mediabunny.min.js', 'https://cdn.jsdelivr.net/npm/mediabunny@1.61.1/dist/bundles/mediabunny.min.cjs'], global: 'Mediabunny' },
+            gltf:       { srcs: ['lib/gltf-transform.min.js'], global: 'GLTFT' },
+            ffmpeg:     { srcs: ['lib/ffmpeg/ffmpeg.js'], global: 'FFmpegWASM' },
+            mp3enc:     { srcs: ['lib/mediabunny-mp3-encoder.min.js', 'https://cdn.jsdelivr.net/npm/@mediabunny/mp3-encoder@1.61.1/dist/bundles/mediabunny-mp3-encoder.min.js'], global: 'MediabunnyMp3Encoder', deps: ['mediabunny'] }
+        };
+        const libPromises = {};
+
+        function injectScript(src) {
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = resolve;
+                s.onerror = () => { s.remove(); reject(new Error('load failed: ' + src)); };
+                document.head.appendChild(s);
+            });
+        }
+
+        function loadLib(key) {
+            const lib = LIBS[key];
+            if (window[lib.global]) return Promise.resolve(window[lib.global]);
+            if (!libPromises[key]) {
+                libPromises[key] = (async () => {
+                    for (const dep of (lib.deps || [])) await loadLib(dep);
+                    for (const src of lib.srcs) {
+                        try { await injectScript(src); } catch (_) { continue; }
+                        if (window[lib.global]) return window[lib.global];
+                    }
+                    throw new Error(`Could not load the ${key} engine (offline?)`);
+                })().catch(err => { delete libPromises[key]; throw err; });
+            }
+            return libPromises[key];
+        }
+
+        // ---------- File-type registry: single source of truth for routing, icons and the "Supported files" sheet ----------
+        const FORMAT_GROUPS = [
+            { cat: 'image', title: 'Photos & images', run: optimizeRasterImage,
+              exts: ['jpg', 'jpeg', 'jfif', 'jpe', 'png', 'webp', 'bmp', 'tif', 'tiff', 'avif', 'heic', 'heif'],
+              how: 'Re-encoded at preset quality, PNG colour quantization, optional WebP and 4K downscale. HEIC/TIFF need a browser that can open them (Safari).' },
+            { cat: 'image', title: 'Vector graphics', run: optimizeSvg, exts: ['svg'],
+              how: 'Removes editor junk (Illustrator, Inkscape, Sketch, Figma exports), comments and whitespace; rounds coordinates.' },
+            { cat: 'video', title: 'Video', media: true,
+              exts: ['mp4', 'm4v', 'mov', 'qt', 'mkv', 'webm', 'ts', 'mts', 'm2ts'],
+              how: 'Re-encoded to MP4 (H.264 + AAC) with your device’s hardware encoder. Falls back to the software encoder when needed. Optional 1080p / 720p downscale.' },
+            { cat: 'video', title: 'Video — legacy & camera formats', media: true, legacy: true,
+              exts: ['avi', 'wmv', 'asf', 'flv', 'f4v', '3gp', '3g2', 'mpg', 'mpeg', 'm2v', 'vob', 'ogv', 'mxf', 'dv', 'divx', 'rm', 'rmvb', 'y4m'],
+              how: 'Converted to MP4 (H.264 + AAC) with the built-in software encoder (≈10 MB download the first time; slower than hardware).' },
+            { cat: 'audio', title: 'Audio', media: true,
+              exts: ['mp3', 'wav', 'flac', 'm4a', 'm4b', 'aac', 'ogg', 'oga', 'opus', 'weba'],
+              how: 'MP3/WAV/FLAC → MP3, M4A/AAC → AAC, OGG/Opus → Opus at 192 / 128 / 96 kbps.' },
+            { cat: 'audio', title: 'Audio — legacy formats', media: true, legacy: true,
+              exts: ['wma', 'aif', 'aiff', 'aifc', 'amr', 'ac3', 'au', 'caf', 'mka', 'ape', 'wv'],
+              how: 'Converted to MP3 with the built-in software encoder.' },
+            { cat: 'document', title: 'PDF', run: optimizePdf, exts: ['pdf'],
+              how: 'Ghostscript engine (≈11 MB download the first time): downsamples images to 300 / 150 / 100 dpi, subsets fonts, removes duplicates. Signed PDFs are left untouched; PDFs with form fields use a gentler mode that keeps the fields.' },
+            { cat: 'document', title: 'Microsoft Office & OpenDocument', run: optimizeZipContainer,
+              exts: ['docx', 'docm', 'dotx', 'xlsx', 'xlsm', 'xltx', 'pptx', 'pptm', 'potx', 'ppsx', 'vsdx', 'odt', 'ods', 'odp', 'odg'],
+              how: 'Recompresses embedded photos and repacks at maximum compression. Word, Excel, PowerPoint, Visio, LibreOffice.' },
+            { cat: 'design', title: 'Design & creative apps', run: optimizeZipContainer,
+              exts: ['xd', 'idml', 'sketch', 'kra', 'ora', 'xmind', 'lottie'],
+              how: 'Adobe XD, InDesign IDML, Sketch, Krita, OpenRaster, XMind, dotLottie — embedded photos recompressed, package repacked.' },
+            { cat: 'document', title: 'E-books & comics', run: optimizeZipContainer, exts: ['epub', 'cbz'],
+              how: 'Pages/illustrations recompressed, package repacked (EPUB structure kept valid).' },
+            { cat: '3d', title: 'Blender', run: optimizeBlend, exts: ['blend'],
+              how: 'Gzip-compressed — opens directly in Blender. Already-compressed files are skipped.' },
+            { cat: '3d', title: '3D models — glTF binary', run: optimizeGlb, exts: ['glb'],
+              how: 'Removes duplicate/unused data (named empties, extras and UV sets are kept), resizes & recompresses colour textures; normal/roughness/AO maps stay lossless. Aggressive also quantizes meshes. Works in three.js, Babylon, model-viewer, Blender.' },
+            { cat: '3d', title: '3D meshes', run: (item, opts) => item.extension === 'stl' ? optimizeStl(item) : optimizeObj(item, opts), exts: ['stl', 'obj'],
+              how: 'ASCII STL → binary STL (≈80% smaller). OBJ: comments removed, coordinates rounded to 6 / 5 / 4 decimals.' },
+            { cat: '3d', title: '3D printing & maps', run: optimizeZipContainer, exts: ['3mf', 'kmz'],
+              how: '3MF (Cura, PrusaSlicer, Bambu Studio) and Google Earth KMZ — repacked at maximum compression.' },
+            { cat: 'font', title: 'Fonts', run: optimizeFont, exts: ['ttf', 'otf'],
+              how: 'Converted to WOFF2 — the compressed web-font format (typically 50–70% smaller).' },
+            { cat: 'code', title: 'Web code', run: optimizeCode, exts: ['js', 'mjs', 'cjs', 'css', 'html', 'htm'],
+              how: 'Minified. JavaScript via Terser; licence comments kept.' },
+            { cat: 'code', title: 'Data & markup', run: optimizeCode,
+              exts: ['json', 'geojson', 'topojson', 'webmanifest', 'map', 'har', 'gltf', 'babylon', 'xml', 'kml', 'gpx', 'dae', 'xliff', 'xlf', 'rss', 'atom', 'plist', 'xsd'],
+              how: 'Whitespace & comments removed. Numbers are never rewritten, so data stays exact.' },
+            { cat: 'archive', title: 'Archives', run: (item, opts, p) => item.extension === 'tar' ? optimizeTar(item, opts) : optimizeZipContainer(item, opts, p), exts: ['zip', 'tar'],
+              how: 'ZIP: photos inside recompressed, repacked at maximum compression. TAR → TAR.GZ.' }
+        ];
+        const EXT_INDEX = {};
+        FORMAT_GROUPS.forEach(g => g.exts.forEach(e => { EXT_INDEX[e] = g; }));
+        const groupForExt = ext => EXT_INDEX[ext] || null;
+
+        const KEPT_AS_IS = {
+            gif:  { cat: 'image', why: 'GIF kept as-is (re-encoding would drop animation)' },
+            ico:  { cat: 'image', why: 'Icon files are kept as-is' },
+            psd:  { cat: 'design', why: 'Photoshop files can’t be rewritten safely in a browser — kept original' },
+            ai:   { cat: 'design', why: 'Illustrator files would lose editability — kept original' },
+            eps:  { cat: 'design', why: 'EPS kept as-is' },
+            indd: { cat: 'design', why: 'InDesign files are proprietary — kept original (use IDML)' },
+            fig:  { cat: 'design', why: 'Figma files are proprietary — kept original' },
+            afdesign: { cat: 'design', why: 'Affinity files are proprietary — kept original' },
+            afphoto: { cat: 'design', why: 'Affinity files are proprietary — kept original' },
+            fbx:  { cat: '3d', why: 'FBX optimization is not supported yet' },
+            usdz: { cat: '3d', why: 'USDZ must stay uncompressed for AR Quick Look — kept original' },
+            rar:  { cat: 'archive', why: '.rar archives are kept as-is' },
+            '7z': { cat: 'archive', why: '.7z archives are kept as-is' },
+            gz:   { cat: 'archive', why: 'Already compressed (.gz)' },
+            woff: { cat: 'font', why: 'WOFF fonts are already compressed' },
+            woff2: { cat: 'font', why: 'Already WOFF2' }
+        };
+        const KEPT_LIST = Object.keys(KEPT_AS_IS);
+
+        function mediaSupportLabel() {
+            const v = 'VideoEncoder' in window, a = 'AudioDecoder' in window;
+            if (v && a) return { ok: true, text: 'Hardware-accelerated in this browser' };
+            return { ok: false, text: 'Software encoder in this browser (slower)' };
+        }
+
+        function renderFormats() {
+            const media = mediaSupportLabel();
+            const total = FORMAT_GROUPS.reduce((n, g) => n + g.exts.length, 0);
+            const chip = e => `<span class="uppercase font-bold text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300 border border-slate-700">${e}</span>`;
+            document.getElementById('formatsList').innerHTML =
+                `<p class="text-xs text-slate-400 -mt-1 mb-1">${total} file types optimized · a result is never larger than the original.</p>` +
+                FORMAT_GROUPS.map(f => {
+                const meta = getCategoryIcon(f.cat);
+                const badge = f.media && !f.legacy
+                    ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded ${media.ok ? 'text-emerald-300 bg-emerald-500/10' : 'text-amber-300 bg-amber-500/10'}">${media.text}</span>` : '';
+                return `
+                <div class="flex gap-3.5 p-3 rounded-2xl bg-darkbg/60 border border-darkborder">
+                    <div class="w-10 h-10 rounded-xl ${meta.bg} ${meta.color} flex items-center justify-center flex-shrink-0"><i class="fa-solid ${meta.icon}"></i></div>
+                    <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-2 mb-1"><p class="text-sm font-semibold text-white">${f.title}</p>${badge}</div>
+                        <div class="flex flex-wrap gap-1 mb-1.5">${f.exts.map(chip).join('')}</div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">${f.how}</p>
+                    </div>
+                </div>`;
+            }).join('') + `
+                <div class="pt-2">
+                    <p class="text-[11px] text-slate-500 uppercase font-semibold tracking-wider mb-2">Accepted but kept as-is</p>
+                    <div class="flex flex-wrap gap-1">${KEPT_LIST.map(chip).join('')}</div>
+                    <p class="text-[11px] text-slate-500 mt-2">Any other file can be added too — it’s returned unchanged.</p>
+                </div>`;
+        }
+
+        // ---------- Settings persistence (per browser) ----------
+        const SETTINGS_KEY = 'omniopti.settings.v1';
+        const TOGGLES = ['toggleMetadata', 'toggleWebP', 'toggleDownscale', 'toggleMedia', 'toggleTextures', 'toggleDiag'];
+
+        function saveSettings() {
+            const data = { preset: currentPreset };
+            TOGGLES.forEach(id => data[id] = document.getElementById(id).checked);
+            try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(data)); } catch (_) {}
+        }
+        function loadSettings() {
+            let data = null;
+            try { data = JSON.parse(localStorage.getItem(SETTINGS_KEY)); } catch (_) {}
+            if (data) {
+                TOGGLES.forEach(id => { if (typeof data[id] === 'boolean') document.getElementById(id).checked = data[id]; });
+                if (PRESETS[data.preset]) currentPreset = data.preset;
+            }
+            applyPresetUI();
+        }
+        TOGGLES.forEach(id => document.getElementById(id).addEventListener('change', saveSettings));
+
+        // ---------- Lifetime stats (per browser) ----------
+        const LIFE_KEY = 'omniopti.lifetime.v1';
+        function getLifetime() {
+            try { return JSON.parse(localStorage.getItem(LIFE_KEY)) || { files: 0, saved: 0 }; } catch (_) { return { files: 0, saved: 0 }; }
+        }
+        function addLifetime(saved) {
+            const l = getLifetime(); l.files += 1; l.saved += saved;
+            try { localStorage.setItem(LIFE_KEY, JSON.stringify(l)); } catch (_) {}
+        }
+        function renderLifetime() {
+            const l = getLifetime();
+            document.getElementById('lifeFiles').innerText = l.files.toLocaleString();
+            document.getElementById('lifeSaved').innerText = formatBytes(l.saved);
+        }
+        function resetLifetime() {
+            try { localStorage.removeItem(LIFE_KEY); } catch (_) {}
+            renderLifetime();
+        }
+
+        // ---------- Sheets (dialogs) ----------
+        function openSheet(id) {
+            const d = document.getElementById(id);
+            if (id === 'formatsDialog') renderFormats();
+            if (id === 'accountDialog') { updateStats(); renderLifetime(); renderDiagLog(); }
+            if (!d.open) d.showModal();
+        }
+        function closeSheet(el) { el.closest('dialog').close(); }
+        document.querySelectorAll('dialog.sheet').forEach(d => {
+            d.addEventListener('click', e => { if (e.target === d) d.close(); }); // click on backdrop
+        });
+
+        // ---------- Drag & drop ----------
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+            dropzone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+        ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, () => dropzone.classList.add('dropzone-active')));
+        ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, () => dropzone.classList.remove('dropzone-active')));
+        dropzone.addEventListener('drop', e => processFiles(e.dataTransfer.files));
+        dropzone.addEventListener('click', e => { if (e.target === fileInput) return; fileInput.click(); });
+        // Dropping anywhere on the page also works
+        window.addEventListener('dragover', e => e.preventDefault());
+        window.addEventListener('drop', e => { e.preventDefault(); if (!dropzone.contains(e.target)) processFiles(e.dataTransfer.files); });
+
+        document.addEventListener('paste', e => {
+            const files = Array.from(e.clipboardData?.files || []);
+            if (files.length) processFiles(files);
+        });
+
+        function handleFileSelect(e) {
+            processFiles(e.target.files);
+            e.target.value = '';
+        }
+
+        function processFiles(files) {
+            if (!files || files.length === 0) return;
+            const list = Array.from(files);
+
+            list.forEach(file => {
+                const ext = getExtension(file.name);
+                const fileObj = {
+                    id: 'file_' + Math.random().toString(36).slice(2, 11),
+                    file,
+                    name: file.name,
+                    size: file.size,
+                    extension: ext,
+                    typeCategory: getCategory(file.name, file.type || ''),
+                    status: 'ready',       // ready | optimizing | done | skipped | error
+                    optimizedSize: null,
+                    compressedBlob: null,
+                    outName: file.name,
+                    note: '',
+                    progress: 0,
+                    thumbnail: null
+                };
+                if (['jpg', 'jpeg', 'jfif', 'jpe', 'png', 'webp', 'gif', 'svg', 'bmp', 'avif', 'ico'].includes(ext)) {
+                    fileObj.thumbnail = URL.createObjectURL(file);
+                }
+                filesQueue.push(fileObj);
+            });
+
+            updateStats();
+            renderQueue();
+            showToast(`Added ${list.length} file${list.length === 1 ? '' : 's'}`);
+        }
+
+        // =====================================================================
+        //  Diagnostics log — what worked, what didn't, on which browser.
+        //  Sends metadata only (type, size, result, timings, engine trace) — never file contents.
+        //  File names are included only in Test mode (?test in the URL).
+        // =====================================================================
+        const APP_VERSION = '4.1';
+        const DIAG_ENDPOINT = 'diag/log.php';
+        const TEST_MODE = /[?&]test\b/.test(location.search);
+        const SESSION_ID = Math.random().toString(36).slice(2, 10);
+        const localLog = [];                 // everything this session, for the in-app viewer / export
+        let diagQueue = [], diagTimer = null, envSent = false;
+
+        function browserInfo() {
+            const ua = navigator.userAgent;
+            const m = ua.match(/(Edg|OPR|Firefox|Chrome|Version)\/(\d+)/);
+            let name = m ? ({ Edg: 'Edge', OPR: 'Opera', Version: 'Safari' }[m[1]] || m[1]) : 'Other';
+            const os = /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS'
+                     : /Mac OS X/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : 'Other';
+            return `${name} ${m ? m[2] : ''} / ${os}`.trim();
+        }
+
+        async function capabilitySnapshot() {
+            const caps = {
+                webcodecs: 'VideoEncoder' in window, audioDecoder: 'AudioDecoder' in window,
+                compressionStream: 'CompressionStream' in window, wasm: typeof WebAssembly !== 'undefined',
+                cores: navigator.hardwareConcurrency || 0, memoryGB: navigator.deviceMemory || 0
+            };
+            try {
+                if (caps.webcodecs) {
+                    caps.h264Encode = (await VideoEncoder.isConfigSupported({ codec: 'avc1.42001f', width: 1280, height: 720, bitrate: 2e6 })).supported;
+                    caps.h264Decode = (await VideoDecoder.isConfigSupported({ codec: 'avc1.42001f' })).supported;
+                }
+                if ('AudioEncoder' in window) {
+                    caps.aacEncode = (await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: 48000, numberOfChannels: 2, bitrate: 128000 })).supported;
+                }
+            } catch (_) {}
+            return caps;
+        }
+
+        function diagEnabled() {
+            const t = document.getElementById('toggleDiag');
+            return location.protocol.startsWith('http') && (TEST_MODE || !t || t.checked);
+        }
+
+        async function logEvent(evt) {
+            const entry = { t: new Date().toISOString(), v: APP_VERSION, sid: SESSION_ID, test: TEST_MODE, ...evt };
+            localLog.push(entry);
+            if (localLog.length > 2000) localLog.shift();
+            renderDiagLog();
+            if (!diagEnabled()) return;
+            if (!envSent) {
+                envSent = true;
+                diagQueue.push({ t: entry.t, v: APP_VERSION, sid: SESSION_ID, test: TEST_MODE, type: 'session',
+                                 browser: browserInfo(), ua: navigator.userAgent.slice(0, 200), caps: await capabilitySnapshot() });
+            }
+            diagQueue.push(entry);
+            clearTimeout(diagTimer);
+            diagTimer = setTimeout(flushDiag, 1500);
+        }
+
+        function flushDiag(useBeacon = false) {
+            if (!diagQueue.length) return;
+            const body = JSON.stringify(diagQueue.splice(0, 50));
+            if (useBeacon && navigator.sendBeacon) { navigator.sendBeacon(DIAG_ENDPOINT, new Blob([body], { type: 'application/json' })); }
+            else fetch(DIAG_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+            if (diagQueue.length) diagTimer = setTimeout(flushDiag, 300);
+        }
+        window.addEventListener('pagehide', () => flushDiag(true));
+
+        function logFileResult(item, opts, ms) {
+            logEvent({
+                type: 'file',
+                name: TEST_MODE ? item.name : undefined,
+                ext: item.extension, cat: item.typeCategory,
+                size: item.size, outSize: item.optimizedSize, outExt: item.status === 'done' ? getExtension(item.outName) : undefined,
+                saved: item.optimizedSize ? Math.round((1 - item.optimizedSize / item.size) * 1000) / 10 : 0,
+                status: item.status, note: item.note,
+                ms: Math.round(ms), preset: opts.preset,
+                opts: [opts.stripMeta && 'meta', opts.toWebP && 'webp', opts.downscale && 'down', opts.media && 'media', opts.compressContainers && 'pack'].filter(Boolean).join(','),
+                trace: item.trace.slice(0, 20),
+                browser: browserInfo()
+            });
+        }
+
+        // Uncaught errors are logged too
+        window.addEventListener('error', e => logEvent({ type: 'jserror', note: String(e.message).slice(0, 300), where: `${(e.filename || '').split('/').pop()}:${e.lineno}` }));
+        window.addEventListener('unhandledrejection', e => logEvent({ type: 'jserror', note: String(e.reason && e.reason.message || e.reason).slice(0, 300), where: 'promise' }));
+
+        // ---------- In-app viewer (Account sheet) ----------
+        function renderDiagLog() {
+            const el = document.getElementById('diagList');
+            if (!el) return;
+            const rows = localLog.filter(e => e.type === 'file' || e.type === 'jserror').slice(-60).reverse();
+            document.getElementById('diagCount').innerText = localLog.filter(e => e.type === 'file').length;
+            el.innerHTML = rows.length ? rows.map(e => {
+                const tone = e.status === 'done' ? 'text-emerald-400' : e.status === 'skipped' ? 'text-amber-300' : 'text-rose-400';
+                const label = e.type === 'jserror' ? 'JS error' : e.status;
+                return `<div class="py-1.5 border-b border-darkborder/60 last:border-0">
+                    <div class="flex items-center gap-2 text-[11px]">
+                        <span class="font-semibold ${tone} w-14 flex-shrink-0">${escapeHtml(label)}</span>
+                        <span class="uppercase font-bold text-slate-300">${escapeHtml(e.ext || '')}</span>
+                        <span class="text-slate-500 truncate">${e.size ? formatBytes(e.size) : ''}${e.outSize ? ' → ' + formatBytes(e.outSize) : ''}${e.ms ? ' · ' + (e.ms / 1000).toFixed(1) + 's' : ''}</span>
+                    </div>
+                    ${e.note ? `<p class="text-[11px] text-slate-500 truncate" title="${escapeHtml(e.note)}">${escapeHtml(e.note)}</p>` : ''}
+                    ${e.trace && e.trace.length ? `<p class="text-[10px] text-slate-600 truncate" title="${escapeHtml(e.trace.join(' › '))}">${escapeHtml(e.trace.join(' › '))}</p>` : ''}
+                </div>`;
+            }).join('') : '<p class="text-[11px] text-slate-500">Nothing yet — optimize some files.</p>';
+        }
+
+        function exportDiagLog() {
+            const blob = new Blob([localLog.map(e => JSON.stringify(e)).join('\n') + '\n'], { type: 'application/x-ndjson' });
+            triggerDownload(blob, `omniopti-log-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.jsonl`);
+        }
+
+        // ---------- Helpers ----------
+        function getExtension(filename) {
+            const i = filename.lastIndexOf('.');
+            return i > 0 ? filename.slice(i + 1).toLowerCase() : '';
+        }
+
+        function replaceExtension(filename, newExt) {
+            const i = filename.lastIndexOf('.');
+            return (i > 0 ? filename.slice(0, i) : filename) + '.' + newExt;
+        }
+
+        function getCategory(filename, mimeType) {
+            const group = groupForExt(getExtension(filename));
+            if (group) return group.cat;
+            if (KEPT_AS_IS[getExtension(filename)]) return KEPT_AS_IS[getExtension(filename)].cat;
+            if (mimeType.startsWith('image/')) return 'image';
+            if (mimeType.startsWith('video/')) return 'video';
+            if (mimeType.startsWith('audio/')) return 'audio';
+            return 'general';
+        }
+
+        function getCategoryIcon(category) {
+            switch (category) {
+                case 'image': return { icon: 'fa-image', color: 'text-sky-400', bg: 'bg-sky-500/10' };
+                case '3d': return { icon: 'fa-cube', color: 'text-orange-400', bg: 'bg-orange-500/10' };
+                case 'document': return { icon: 'fa-file-lines', color: 'text-rose-400', bg: 'bg-rose-500/10' };
+                case 'design': return { icon: 'fa-pen-nib', color: 'text-pink-400', bg: 'bg-pink-500/10' };
+                case 'video': return { icon: 'fa-file-video', color: 'text-purple-400', bg: 'bg-purple-500/10' };
+                case 'audio': return { icon: 'fa-file-audio', color: 'text-emerald-400', bg: 'bg-emerald-500/10' };
+                case 'font': return { icon: 'fa-font', color: 'text-teal-300', bg: 'bg-teal-500/10' };
+                case 'code': return { icon: 'fa-file-code', color: 'text-amber-400', bg: 'bg-amber-500/10' };
+                case 'archive': return { icon: 'fa-file-zipper', color: 'text-indigo-400', bg: 'bg-indigo-500/10' };
+                default: return { icon: 'fa-file', color: 'text-slate-400', bg: 'bg-slate-500/10' };
+            }
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (!bytes) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function getOptions() {
+            return {
+                ...PRESETS[currentPreset],
+                preset: currentPreset,
+                stripMeta: document.getElementById('toggleMetadata').checked,
+                compressContainers: document.getElementById('toggleTextures').checked,
+                downscale: document.getElementById('toggleDownscale').checked,
+                toWebP: document.getElementById('toggleWebP').checked,
+                media: document.getElementById('toggleMedia').checked
+            };
+        }
+
+        const nextFrame = () => new Promise(r => requestAnimationFrame(() => r()));
+        const libBase = () => new URL('lib/', location.href).href;
+        const isAppleWebKit = /AppleWebKit/.test(navigator.userAgent) && !/Chrome|Chromium|Edg/.test(navigator.userAgent);
+        // Largest canvas every browser accepts (iOS/Safari caps at ~16.7 MP)
+        const MAX_CANVAS_AREA = isAppleWebKit ? 16777216 : 100000000;
+
+        // Signals that a file was intentionally left untouched (not an error)
+        class SkipError extends Error {}
+        const skip = msg => { throw new SkipError(msg); };
+
+        async function readHead(file, n) {
+            return new Uint8Array(await file.slice(0, n).arrayBuffer());
+        }
+        const bytesToLatin1 = b => new TextDecoder('latin1').decode(b);
+        function looksBinary(bytes) {
+            const n = Math.min(bytes.length, 8192);
+            for (let i = 0; i < n; i++) if (bytes[i] === 0) return true;
+            return false;
+        }
+
+        // Strict UTF-8 text read: never silently turn other encodings into "�"
+        async function readUtf8(file) {
+            const buf = new Uint8Array(await file.arrayBuffer());
+            const bom = buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF;
+            try {
+                return { text: new TextDecoder('utf-8', { fatal: true }).decode(buf), bom };
+            } catch (_) {
+                skip('Text isn’t UTF-8 encoded — kept original');
+            }
+        }
+        const withBom = (text, bom) => bom ? '\uFEFF' + text : text;
+
+        // JPEG helpers: frame size (SOF) and EXIF orientation
+        function jpegInfo(bytes) {
+            const info = { width: 0, height: 0, orientation: 1, orientationAt: -1, littleEndian: false };
+            if (bytes[0] !== 0xFF || bytes[1] !== 0xD8) return info;
+            let i = 2;
+            while (i + 9 < bytes.length) {
+                if (bytes[i] !== 0xFF) { i++; continue; }
+                const m = bytes[i + 1];
+                if (m === 0xFF) { i++; continue; }
+                if (m === 0xD9 || m === 0xDA) break;
+                const len = (bytes[i + 2] << 8) | bytes[i + 3];
+                if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) {
+                    info.height = (bytes[i + 5] << 8) | bytes[i + 6];
+                    info.width = (bytes[i + 7] << 8) | bytes[i + 8];
+                } else if (m === 0xE1 && String.fromCharCode(...bytes.subarray(i + 4, i + 8)) === 'Exif') {
+                    const t = i + 10, le = bytes[t] === 0x49;
+                    const r16 = o => le ? bytes[o] | (bytes[o + 1] << 8) : (bytes[o] << 8) | bytes[o + 1];
+                    const r32 = o => le ? (bytes[o] | (bytes[o + 1] << 8) | (bytes[o + 2] << 16) | (bytes[o + 3] << 24)) >>> 0
+                                        : ((bytes[o] << 24) | (bytes[o + 1] << 16) | (bytes[o + 2] << 8) | bytes[o + 3]) >>> 0;
+                    try {
+                        const ifd = t + r32(t + 4), n = r16(ifd);
+                        for (let k = 0; k < n; k++) if (r16(ifd + 2 + k * 12) === 0x0112) {
+                            info.orientation = r16(ifd + 2 + k * 12 + 8);
+                            info.orientationAt = ifd + 2 + k * 12 + 8;
+                            info.littleEndian = le;
+                        }
+                    } catch (_) {}
+                }
+                i += 2 + len;
+            }
+            return info;
+        }
+
+        // Animated WebP (VP8X animation flag / ANIM chunk) or APNG (acTL before IDAT)
+        async function isAnimatedImage(file, ext) {
+            const head = await readHead(file, 1 << 16);
+            const str = bytesToLatin1(head);
+            if (ext === 'webp') return str.slice(12, 16) === 'VP8X' && (head[20] & 0x02) !== 0 || str.includes('ANIM');
+            if (ext === 'png') { const a = str.indexOf('acTL'), d = str.indexOf('IDAT'); return a !== -1 && (d === -1 || a < d); }
+            return false;
+        }
+
+        // Fetch a (possibly gzipped) binary from lib/. Works whether or not the server auto-decompresses .gz.
+        async function fetchMaybeGzip(url) {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+            let bytes = new Uint8Array(await res.arrayBuffer());
+            if (bytes[0] === 0x1F && bytes[1] === 0x8B) {
+                const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+                bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+            }
+            return bytes;
+        }
+
+        function canvasToBlob(canvas, type, quality) {
+            return new Promise((resolve, reject) => {
+                canvas.toBlob(b => b ? resolve(b) : reject(new Error('Image encoder failed (image too large for this browser?)')), type, quality);
+            });
+        }
+
+        async function decodeImage(blob, bitmapOptions) {
+            if ('createImageBitmap' in window) {
+                try { return await createImageBitmap(blob, bitmapOptions); } catch (_) { /* fall through */ }
+                if (bitmapOptions) { try { return await createImageBitmap(blob); } catch (_) {} }
+            }
+            const url = URL.createObjectURL(blob);
+            try {
+                const img = new Image();
+                img.decoding = 'async';
+                img.src = url;
+                await img.decode();
+                return img;
+            } catch (_) {
+                return null;
+            } finally {
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Draw an image into a canvas, optionally capping the longest side (stepped downscale for quality).
+        // Also keeps within the browser's maximum canvas area.
+        function drawToCanvas(source, maxDim) {
+            const w = source.width, h = source.height;
+            let s = 1;
+            if (maxDim && Math.max(w, h) > maxDim) s = maxDim / Math.max(w, h);
+            if (w * h * s * s > MAX_CANVAS_AREA) s = Math.sqrt(MAX_CANVAS_AREA / (w * h));
+            const tw = Math.max(1, Math.round(w * s)), th = Math.max(1, Math.round(h * s));
+
+            let current = source, cw = w, ch = h;
+            while (cw / 2 > tw && ch / 2 > th) {
+                cw = Math.round(cw / 2); ch = Math.round(ch / 2);
+                const step = document.createElement('canvas');
+                step.width = cw; step.height = ch;
+                const sctx = step.getContext('2d');
+                sctx.imageSmoothingQuality = 'high';
+                sctx.drawImage(current, 0, 0, cw, ch);
+                current = step;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = tw; canvas.height = th;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(current, 0, 0, tw, th);
+            return { canvas, resized: tw !== w || th !== h, width: tw, height: th };
+        }
+
+        function canvasHasAlpha(canvas) {
+            const { width, height } = canvas;
+            const data = canvas.getContext('2d').getImageData(0, 0, width, height).data;
+            const step = data.length > 16e6 ? 16 : 4; // sample big images
+            for (let i = 3; i < data.length; i += step) if (data[i] < 255) return true;
+            return false;
+        }
+
+        async function encodePng(canvas, colors) {
+            try {
+                const UPNG = await loadLib('upng');
+                const { width, height } = canvas;
+                const data = canvas.getContext('2d').getImageData(0, 0, width, height).data;
+                await nextFrame();
+                return new Blob([UPNG.encode([data.buffer], width, height, colors)], { type: 'image/png' });
+            } catch (err) {
+                console.warn('UPNG unavailable, using canvas PNG', err);
+                return canvasToBlob(canvas, 'image/png');
+            }
+        }
+
+        // ---------- JPEG metadata (keep EXIF/ICC when "Strip metadata" is off) ----------
+        function extractJpegMetaSegments(bytes) {
+            const segs = [];
+            if (bytes[0] !== 0xFF || bytes[1] !== 0xD8) return segs;
+            let i = 2;
+            while (i + 4 < bytes.length && bytes[i] === 0xFF) {
+                const marker = bytes[i + 1];
+                if (marker === 0xFF) { i++; continue; }          // fill byte
+                if (marker === 0xDA || marker === 0xD9) break;    // start of scan
+                const len = (bytes[i + 2] << 8) | bytes[i + 3];
+                // APP1 = EXIF/XMP. ICC (APP2) is dropped: the canvas already converted pixels to sRGB.
+                if (marker === 0xE1) segs.push(bytes.slice(i, i + 2 + len));
+                i += 2 + len;
+            }
+            return segs;
+        }
+
+        // Pixels are already rotated by the browser, so reset the EXIF Orientation tag to 1
+        function resetExifOrientation(seg) {
+            try {
+                if (String.fromCharCode(...seg.slice(4, 8)) !== 'Exif') return seg;
+                const t = 10;
+                const le = seg[t] === 0x49;
+                const r16 = o => le ? seg[o] | (seg[o + 1] << 8) : (seg[o] << 8) | seg[o + 1];
+                const r32 = o => le ? (seg[o] | (seg[o + 1] << 8) | (seg[o + 2] << 16) | (seg[o + 3] << 24)) >>> 0
+                                    : ((seg[o] << 24) | (seg[o + 1] << 16) | (seg[o + 2] << 8) | seg[o + 3]) >>> 0;
+                const ifd = t + r32(t + 4);
+                const count = r16(ifd);
+                for (let n = 0; n < count; n++) {
+                    const e = ifd + 2 + n * 12;
+                    if (r16(e) === 0x0112) {
+                        if (le) { seg[e + 8] = 1; seg[e + 9] = 0; } else { seg[e + 8] = 0; seg[e + 9] = 1; }
+                    }
+                }
+            } catch (_) { /* leave as-is */ }
+            return seg;
+        }
+
+        async function injectJpegMeta(jpegBlob, segs) {
+            if (!segs.length) return jpegBlob;
+            const out = new Uint8Array(await jpegBlob.arrayBuffer());
+            let rest = out.subarray(2);
+            if (rest[0] === 0xFF && rest[1] === 0xE0) {               // drop encoder's JFIF APP0: EXIF must come first
+                const len = (rest[2] << 8) | rest[3];
+                rest = rest.subarray(2 + len);
+            }
+            return new Blob([out.subarray(0, 2), ...segs, rest], { type: 'image/jpeg' });
+        }
+
+        // =====================================================================
+        //  Optimizers — each returns { blob, outName, note? } or throws SkipError
+        // =====================================================================
+
+        // ---------- Raster images ----------
+        async function optimizeRasterImage(item, opts, setProgress) {
+            const ext = item.extension;
+            if (await isAnimatedImage(item.file, ext)) skip('Animated image — kept original so the animation survives');
+            const bitmap = await decodeImage(item.file);
+            if (!bitmap) skip(`This browser can't decode .${ext} images — kept original`);
+            setProgress(25);
+
+            const { canvas, resized, width, height } = drawToCanvas(bitmap, opts.downscale ? opts.maxDim : null);
+            if (bitmap.close) bitmap.close();
+            setProgress(45);
+            await nextFrame();
+
+            let blob = null, outExt, note = '';
+            const isJpeg = ['jpg', 'jpeg', 'jfif', 'jpe'].includes(ext);
+
+            if (opts.toWebP && ext !== 'webp') {
+                const webp = await canvasToBlob(canvas, 'image/webp', opts.webpQ);
+                if (webp.type === 'image/webp') { blob = webp; outExt = 'webp'; }
+                else note = 'WebP not supported in this browser — kept format. ';
+            }
+
+            if (!blob) {
+                if (isJpeg || (['heic', 'heif', 'tif', 'tiff', 'avif'].includes(ext) && !canvasHasAlpha(canvas))) {
+                    blob = await canvasToBlob(canvas, 'image/jpeg', opts.jpegQ);
+                    outExt = isJpeg ? ext : 'jpg';
+                    if (isJpeg && !opts.stripMeta) {
+                        const segs = extractJpegMetaSegments(new Uint8Array(await item.file.arrayBuffer()))
+                            .map(s => s[4] === 0x45 ? resetExifOrientation(s) : s);
+                        blob = await injectJpegMeta(blob, segs);
+                    }
+                } else if (ext === 'webp') {
+                    blob = await canvasToBlob(canvas, 'image/webp', opts.webpQ);
+                    outExt = 'webp';
+                } else {
+                    setProgress(55);
+                    blob = await encodePng(canvas, opts.pngColors);   // PNG / BMP → quantized PNG
+                    outExt = 'png';
+                }
+            }
+            setProgress(90);
+
+            const sameFormat = outExt === ext;
+            if (blob.size >= item.size && !resized) {
+                skip(note + (sameFormat ? 'Already well optimized — kept original' : 'Converted file would be larger — kept original'));
+            }
+            if (resized) note += `Resized to ${width}×${height}. `;
+            return { blob, outName: sameFormat ? item.name : replaceExtension(item.name, outExt), note: note.trim() };
+        }
+
+        // ---------- Text-safety helpers ----------
+        // Replace protected regions with placeholders, transform the rest, then restore.
+        function withStash(text, patterns, transform) {
+            const keep = [];
+            let s = text;
+            for (const re of patterns) s = s.replace(re, m => `\u0001${keep.push(m) - 1}\u0001`);
+            s = transform(s);
+            // restore (placeholders can be nested, e.g. a string inside url())
+            for (let guard = 0; guard < 5 && /\u0001\d+\u0001/.test(s); guard++) {
+                s = s.replace(/\u0001(\d+)\u0001/g, (m, i) => keep[+i]);
+            }
+            return s;
+        }
+
+        // ---------- SVG ----------
+        function minifySvg(text, precision) {
+            return withStash(text, [/<(text|textPath|tspan|style|script|pre)\b[\s\S]*?<\/\1>/gi, /<!\[CDATA\[[\s\S]*?\]\]>/g], s => {
+                s = s
+                    .replace(/<\?xml[\s\S]*?\?>/g, '')
+                    .replace(/<!DOCTYPE[^>[]*>/gi, '')                    // DOCTYPEs with entity definitions are kept
+                    .replace(/<!--[\s\S]*?-->/g, '')
+                    .replace(/<metadata[\s\S]*?<\/metadata>/gi, '')
+                    .replace(/<sodipodi:namedview[\s\S]*?(\/>|<\/sodipodi:namedview>)/gi, '')
+                    .replace(/\s+(inkscape|sodipodi|sketch|serif):[\w-]+="[^"]*"/gi, '')
+                    .replace(/\s+xmlns:(inkscape|sodipodi|sketch|serif)="[^"]*"/gi, '')
+                    .replace(/\s+data-name="[^"]*"/gi, '')
+                    .replace(/>\s+(?=[<\u0001])/g, '>')
+                    .replace(/\u0001\s+</g, '\u0001<')
+                    .replace(/[ \t\r\n]{2,}/g, ' ')
+                    .replace(/\s+\/>/g, '/>')
+                    .trim();
+                if (precision != null && !/objectBoundingBox/.test(s)) {
+                    // More decimals for small coordinate systems (icons on a 1×1 or 24×24 grid)
+                    const vb = (s.match(/viewBox="([^"]+)"/) || [])[1];
+                    const size = vb ? Math.max(...vb.trim().split(/[\s,]+/).map(Number).slice(2).filter(isFinite)) : 1000;
+                    const digits = precision + Math.max(0, 2 - Math.floor(Math.log10(size > 0 ? size : 1000)));
+                    const round = str => str.replace(/-?\d*\.\d+(?:e-?\d+)?/gi, (n, off, whole) => {
+                        let r = String(parseFloat(parseFloat(n).toFixed(digits)));
+                        if (r === '-0') r = '0';
+                        if (/^-?\./.test(n)) r = r.replace(/^(-?)0\./, '$1.');      // keep compact ".5" form
+                        // "10.004.5" must not become "100.5"
+                        if (!/[.e]/i.test(r) && whole[off + n.length] === '.') r += ' ';
+                        return r;
+                    });
+                    s = s.replace(/\s(d|points|viewBox|x|y|x1|x2|y1|y2|cx|cy|r|rx|ry|width|height|stroke-width)="([^"]*)"/g,
+                        (m, attr, val) => ` ${attr}="${round(val)}"`);
+                }
+                return s;
+            });
+        }
+
+        async function optimizeSvg(item, opts) {
+            const head = await readHead(item.file, 4);
+            if (head[0] === 0x1F && head[1] === 0x8B) skip('SVGZ is already compressed');
+            const { text, bom } = await readUtf8(item.file);
+            const out = withBom(minifySvg(text.replace(/^\uFEFF/, ''), opts.svgPrecision), bom);
+            const blob = new Blob([out], { type: 'image/svg+xml' });
+            if (blob.size >= item.size) skip('Already minified — kept original');
+            return { blob, outName: item.name };
+        }
+
+        // ---------- Code / data ----------
+        const STRING_RE = /"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'/g;
+
+        function minifyCss(css) {
+            const keep = [];
+            const stash = m => `\u0001${keep.push(m) - 1}\u0001`;
+            // One pass so quotes inside comments (e.g. /* don't */) can't swallow real rules
+            let s = css.replace(/\/\*[\s\S]*?\*\/|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'/g, m => m[0] === '/' ? '' : stash(m));
+            s = s.replace(/url\(\s*[^)'"\u0001]*\)/gi, stash)
+                .replace(/\s+/g, ' ')
+                .replace(/\s*([{};,])\s*/g, '$1')
+                .replace(/\s*>\s*/g, '>')
+                .replace(/\{([^{}]*)\}/g, (m, body) => '{' + body.replace(/\s*:\s*/g, ':') + '}') // only inside declaration blocks
+                .replace(/;}/g, '}')
+                .trim();
+            for (let guard = 0; guard < 5 && /\u0001\d+\u0001/.test(s); guard++) s = s.replace(/\u0001(\d+)\u0001/g, (m, i) => keep[+i]);
+            return s;
+        }
+
+        function minifyHtml(html) {
+            return withStash(html, [/<(pre|textarea|script|code)\b[\s\S]*?<\/\1>/gi, /<style\b[^>]*>[\s\S]*?<\/style>/gi], s => s
+                .replace(/<!--(?!\[if|\s*\[endif)[\s\S]*?-->/g, '')
+                .replace(/\s{2,}/g, ' ')            // collapse runs (keeps one space so inline text stays the same)
+                .replace(/>\s+</g, '> <')
+                .trim()
+            ).replace(/<style\b([^>]*)>([\s\S]*?)<\/style>/gi, (m, attrs, css) => `<style${attrs}>${minifyCss(css)}</style>`);
+        }
+
+        // Whitespace-only JSON minifier: never re-parses numbers, so big IDs and precision are preserved
+        function minifyJson(text) {
+            let out = '', inStr = false;
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
+                if (inStr) {
+                    out += c;
+                    if (c === '\\') { out += text[++i]; continue; }
+                    if (c === '"') inStr = false;
+                } else if (c === '"') { inStr = true; out += c; }
+                else if (c !== ' ' && c !== '\n' && c !== '\r' && c !== '\t') out += c;
+            }
+            return out;
+        }
+
+        function minifyXml(text, ext) {
+            // xliff/plist and xml:space="preserve" carry meaningful whitespace between tags
+            const sensitive = ['xliff', 'xlf', 'plist'].includes(ext) || /xml:space\s*=\s*["']preserve/.test(text);
+            return withStash(text, [/<!\[CDATA\[[\s\S]*?\]\]>/g], s => {
+                s = s.replace(/<!--[\s\S]*?-->/g, '');
+                if (!sensitive) s = s.replace(/>[ \t]*\r?\n\s*</g, '><');   // only indentation (whitespace containing a newline)
+                return s.trim();
+            });
+        }
+
+        const JSON_EXTS = ['json', 'geojson', 'topojson', 'webmanifest', 'map', 'har', 'gltf', 'babylon'];
+        const XML_EXTS = ['xml', 'kml', 'gpx', 'dae', 'xliff', 'xlf', 'rss', 'atom', 'plist', 'xsd'];
+
+        async function optimizeCode(item) {
+            const ext = item.extension;
+            const head = await readHead(item.file, 8192);
+            if (looksBinary(head)) skip('Binary file — kept original');
+            let { text, bom } = await readUtf8(item.file);
+            text = text.replace(/^\uFEFF/, '');
+            let out, type = item.file.type || 'text/plain';
+
+            if (JSON_EXTS.includes(ext)) {
+                try { JSON.parse(text); } catch (_) { skip('Invalid JSON — kept original'); }
+                out = minifyJson(text);
+                type = 'application/json';
+            } else if (ext === 'css') {
+                out = minifyCss(text); type = 'text/css';
+            } else if (ext === 'html' || ext === 'htm') {
+                out = minifyHtml(text); type = 'text/html';
+            } else if (['js', 'mjs', 'cjs'].includes(ext)) {
+                let Terser;
+                try { Terser = await loadLib('terser'); } catch (_) { skip('JS minifier could not load — kept original'); }
+                try {
+                    const res = await Terser.minify(text, { compress: true, mangle: true, module: ext === 'mjs', format: { comments: /^!|@license|@preserve/ } });
+                    out = res.code;
+                } catch (err) {
+                    skip('JavaScript syntax not supported by the minifier — kept original');
+                }
+                type = 'text/javascript';
+            } else if (XML_EXTS.includes(ext)) {
+                if (!/^\s*</.test(text)) skip('Not an XML file — kept original');
+                out = minifyXml(text, ext); type = 'application/xml';
+            } else {
+                skip('Kept as-is');
+            }
+
+            const blob = new Blob([withBom(out, bom && !JSON_EXTS.includes(ext))], { type });
+            if (blob.size >= item.size) skip('Already minified — kept original');
+            return { blob, outName: item.name };
+        }
+
+        // ---------- PDF ----------
+        // Primary: Ghostscript (WASM, in a Web Worker) — the same engine desktop PDF compressors use.
+        // Fallback: pdf-lib (recompress RGB/gray JPEG images, object streams) when Ghostscript is unavailable
+        // or the PDF has fillable form fields (Ghostscript can flatten those).
+        const GS_WORKER_SRC = `
+            let compiled = null;
+            let log = [];
+            // This Ghostscript build writes straight to console — capture it
+            console.log = console.info = console.warn = console.error = (...a) => { log.push(a.join(' ')); if (log.length > 400) log.shift(); };
+            async function fetchMaybeGzip(url) {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
+                let b = new Uint8Array(await res.arrayBuffer());
+                if (b[0] === 0x1F && b[1] === 0x8B) {
+                    b = new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+                }
+                return b;
+            }
+            function init(base) {
+                if (!compiled) {
+                    importScripts(base + 'gs/gs.js');
+                    compiled = fetchMaybeGzip(base + 'gs/gs.wasm.gz').then(b => WebAssembly.compile(b));
+                    compiled.catch(() => { compiled = null; });
+                }
+                return compiled;
+            }
+            self.onmessage = async ({ data }) => {
+                log = [];
+                try {
+                    const wasmModule = await init(data.base);
+                    const gs = await Module({
+                        noInitialRun: true,
+                        instantiateWasm: (imports, ok) => {
+                            WebAssembly.instantiate(wasmModule, imports).then(inst => ok(inst, wasmModule), err => {
+                                self.postMessage({ id: data.id, error: 'Could not start Ghostscript: ' + (err && err.message || err), log });
+                            });
+                            return {};
+                        }
+                    });
+                    log = [];
+                    gs.FS.writeFile('/in.pdf', data.input);
+                    let rc;
+                    try { rc = gs.callMain(data.args); } catch (e) { rc = (e && e.status) || -1; log.push(String(e && e.message || e)); }
+                    let out = null;
+                    try { out = gs.FS.readFile('/out.pdf'); } catch (_) {}
+                    self.postMessage({ id: data.id, rc, out, log }, out ? [out.buffer] : []);
+                } catch (e) {
+                    self.postMessage({ id: data.id, error: String(e && e.message || e), log });
+                }
+            };`;
+
+        let gsWorker = null, gsSeq = 0, gsChain = Promise.resolve();
+        const gsPending = new Map();
+        function ensureGsWorker() {
+            if (!gsWorker) {
+                gsWorker = new Worker(URL.createObjectURL(new Blob([GS_WORKER_SRC], { type: 'text/javascript' })));
+                gsWorker.onmessage = ({ data }) => { const p = gsPending.get(data.id); if (p) { gsPending.delete(data.id); p(data); } };
+                gsWorker.onerror = e => {
+                    gsPending.forEach(p => p({ error: e.message || 'Ghostscript worker crashed', log: [] }));
+                    gsPending.clear();
+                    gsWorker.terminate(); gsWorker = null;
+                };
+            }
+        }
+        function runGhostscript(input, args) {
+            const id = ++gsSeq;
+            const job = () => new Promise(resolve => {
+                try { ensureGsWorker(); } catch (e) { return resolve({ error: String(e.message || e), log: [] }); }
+                if (!gsWorker) return resolve({ error: 'Ghostscript worker unavailable', log: [] });
+                gsPending.set(id, resolve);
+                gsWorker.postMessage({ id, base: libBase(), input, args }, [input.buffer]);
+            });
+            // one PDF at a time: keeps memory in check and logs separate
+            const run = gsChain.then(job, job);
+            gsChain = run.catch(() => {});
+            return run;
+        }
+
+        function ghostscriptArgs(preset) {
+            const common = ['-sDEVICE=pdfwrite', '-dCompatibilityLevel=1.5', '-dNOPAUSE', '-dBATCH', '-dSAFER', '-dQUIET',
+                '-dAutoRotatePages=/None', '-dDetectDuplicateImages=true', '-dCompressFonts=true', '-dSubsetFonts=true',
+                '-dPreserveAnnots=true', '-sColorConversionStrategy=LeaveColorUnchanged', '-sOutputFile=/out.pdf'];
+            const byPreset = {
+                low:        ['-dPDFSETTINGS=/printer'],                                    // 300 dpi images
+                balanced:   ['-dPDFSETTINGS=/ebook'],                                      // 150 dpi images
+                aggressive: ['-dPDFSETTINGS=/ebook', '-dDownsampleColorImages=true', '-dDownsampleGrayImages=true',
+                             '-dColorImageResolution=100', '-dGrayImageResolution=100', '-dMonoImageResolution=300']
+            };
+            return [...common, ...byPreset[preset], '/in.pdf'];
+        }
+
+        // Verify Ghostscript's output and repair what it can lose:
+        //  • page count must match the original
+        //  • fonts that had a ToUnicode map (needed for copy/paste & search) get it back
+        async function verifyAndRepairPdf(originalBytes, rewrittenBytes, opts) {
+            const PDFLib = await loadLib('pdflib');
+            const { PDFDocument, PDFName, PDFDict } = PDFLib;
+            const N = n => PDFName.of(n);
+            const orig = await PDFDocument.load(originalBytes, { ignoreEncryption: true, updateMetadata: false });
+            const out = await PDFDocument.load(rewrittenBytes, { updateMetadata: false });
+            if (orig.getPageCount() !== out.getPageCount() || out.getPageCount() === 0) return { ok: false, why: 'page count changed' };
+
+            const baseName = f => { const b = f.get(N('BaseFont')); return b ? b.toString().replace(/^\//, '').replace(/^[A-Z]{6}\+/, '') : null; };
+            const fontsOf = doc => doc.context.enumerateIndirectObjects()
+                .map(([, o]) => o)
+                .filter(o => o instanceof PDFDict && o.get(N('Type')) === N('Font') && o.get(N('Subtype')) !== N('Type3'));
+            const keyOf = f => baseName(f) + '|' + String(f.get(N('Subtype')));
+            const src = new Map();
+            for (const f of fontsOf(orig)) {
+                const tu = f.get(N('ToUnicode'));
+                if (!tu || !baseName(f)) continue;
+                const k = keyOf(f);
+                src.set(k, src.has(k) ? null : orig.context.lookup(tu));   // null = ambiguous (several subsets)
+            }
+            let repaired = 0;
+            for (const f of fontsOf(out)) {
+                if (f.get(N('ToUnicode')) || !baseName(f)) continue;
+                const k = keyOf(f);
+                if (!src.has(k)) continue;                     // original had no text map either
+                const tu = src.get(k);
+                if (!tu || !tu.contents) return { ok: false, why: 'text layer could not be preserved' };
+                const stream = PDFLib.PDFRawStream.of(tu.dict.clone(out.context), tu.contents);
+                f.set(N('ToUnicode'), out.context.register(stream));
+                repaired++;
+            }
+            if (opts.stripMeta) stripPdfMetadata(out, PDFLib);
+            const packed = await out.save({ useObjectStreams: true });
+            return { ok: true, bytes: (repaired || opts.stripMeta || packed.length < rewrittenBytes.length) ? packed : rewrittenBytes, repaired };
+        }
+
+        // Re-encode a JPEG keeping its exact pixel grid. Returns null when that can't be guaranteed
+        // (rotated via EXIF, CMYK/unsupported, or too large for this browser's canvas).
+        // inPdf: PDF viewers ignore EXIF orientation, so we re-encode the raw (unrotated) pixel grid.
+        async function reencodeJpegBytes(bytes, quality, inPdf = false) {
+            const info = jpegInfo(bytes);
+            if (!info.width) return null;
+            if (info.orientation !== 1 && !inPdf) return null;
+            let src = bytes;
+            if (info.orientation !== 1) {               // neutralise the EXIF tag so the browser decodes the raw pixel grid
+                src = bytes.slice();
+                const o = info.orientationAt;
+                if (info.littleEndian) { src[o] = 1; src[o + 1] = 0; } else { src[o] = 0; src[o + 1] = 1; }
+            }
+            const bmp = await decodeImage(new Blob([src], { type: 'image/jpeg' }));
+            if (!bmp) return null;
+            if (bmp.width !== info.width || bmp.height !== info.height) { if (bmp.close) bmp.close(); return null; }
+            const { canvas, resized } = drawToCanvas(bmp, null);
+            if (bmp.close) bmp.close();
+            if (resized) return null;
+            const blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+            return new Uint8Array(await blob.arrayBuffer());
+        }
+
+        function decodeAscii85(bytes) {
+            const out = [];
+            let tuple = 0, count = 0;
+            for (let i = 0; i < bytes.length; i++) {
+                const c = bytes[i];
+                if (c === 0x7E) break;                             // '~>' end
+                if (c <= 0x20) continue;                           // whitespace
+                if (c === 0x7A && count === 0) { out.push(0, 0, 0, 0); continue; } // 'z'
+                tuple = tuple * 85 + (c - 33);
+                if (++count === 5) {
+                    out.push((tuple >>> 24) & 255, (tuple >>> 16) & 255, (tuple >>> 8) & 255, tuple & 255);
+                    tuple = 0; count = 0;
+                }
+            }
+            if (count > 1) {
+                for (let k = count; k < 5; k++) tuple = tuple * 85 + 84;
+                const b = [(tuple >>> 24) & 255, (tuple >>> 16) & 255, (tuple >>> 8) & 255, tuple & 255];
+                out.push(...b.slice(0, count - 1));
+            }
+            return new Uint8Array(out);
+        }
+
+        function stripPdfMetadata(pdf, PDFLib) {
+            const N = PDFLib.PDFName.of;
+            pdf.catalog.delete(N('Metadata'));
+            ['Title', 'Author', 'Subject', 'Keywords', 'Creator', 'Producer'].forEach(k => {
+                try { pdf.getInfoDict().delete(N(k)); } catch (_) {}
+            });
+        }
+
+        // Lossless-structure path: recompress embedded JPEGs and pack objects
+        async function optimizePdfWithPdfLib(bytes, opts, setProgress) {
+            const PDFLib = await loadLib('pdflib');
+            const { PDFDocument, PDFName, PDFRawStream, PDFNumber, PDFArray } = PDFLib;
+            const pdf = await PDFDocument.load(bytes, { updateMetadata: false });
+            const N = n => PDFName.of(n);
+            // Accept DCTDecode alone, or preceded by ASCII85/Flate wrappers (e.g. ReportLab output)
+            const filterList = f => f instanceof PDFArray ? f.asArray().map(String) : f ? [String(f)] : [];
+            const isDct = f => {
+                const l = filterList(f);
+                return l.length > 0 && l[l.length - 1] === '/DCTDecode' && l.slice(0, -1).every(x => x === '/ASCII85Decode' || x === '/FlateDecode');
+            };
+            const unwrap = async (obj) => {
+                let data = obj.contents;
+                for (const f of filterList(obj.dict.get(N('Filter'))).slice(0, -1)) {
+                    if (f === '/ASCII85Decode') data = decodeAscii85(data);
+                    else if (f === '/FlateDecode') data = (await loadLib('pako')).inflate(data);
+                }
+                return data;
+            };
+            const okSpace = cs => cs === N('DeviceRGB') || cs === N('DeviceGray');
+
+            const candidates = pdf.context.enumerateIndirectObjects().filter(([, obj]) =>
+                obj instanceof PDFRawStream &&
+                obj.dict.get(N('Subtype')) === N('Image') &&
+                isDct(obj.dict.get(N('Filter'))) &&
+                okSpace(obj.dict.get(N('ColorSpace'))) &&
+                !obj.dict.get(N('Decode')) && !obj.dict.get(N('SMaskInData')) &&
+                obj.contents.length > 20 * 1024);
+
+            let recompressed = 0;
+            for (let i = 0; i < candidates.length; i++) {
+                const [ref, obj] = candidates[i];
+                try {
+                    const jpeg = await unwrap(obj);
+                    const newBytes = await reencodeJpegBytes(jpeg, opts.pdfJpegQ, true);
+                    if (newBytes && newBytes.length < obj.contents.length * 0.9) {
+                        const dict = obj.dict.clone(pdf.context);
+                        dict.set(N('Length'), PDFNumber.of(newBytes.length));
+                        dict.set(N('Filter'), N('DCTDecode'));
+                        dict.set(N('ColorSpace'), N('DeviceRGB')); // canvas always writes 3-channel JPEG
+                        dict.delete(N('DecodeParms'));
+                        pdf.context.assign(ref, PDFRawStream.of(dict, newBytes));
+                        recompressed++;
+                    }
+                } catch (err) { console.warn('PDF image skipped', err); }
+                setProgress(30 + Math.round((i + 1) / candidates.length * 50));
+            }
+            if (opts.stripMeta) stripPdfMetadata(pdf, PDFLib);
+            const out = await pdf.save({ useObjectStreams: true });
+            return { bytes: out, note: recompressed ? `${recompressed} image(s) recompressed` : '' };
+        }
+
+        async function optimizePdf(item, opts, setProgress) {
+            const bytes = new Uint8Array(await item.file.arrayBuffer());
+            const text = bytesToLatin1(bytes);
+            if (!text.slice(0, 1024).includes('%PDF')) skip('Not a valid PDF — kept original');
+            if (/\/ByteRange\s*\[/.test(text) && /\/Type\s*\/Sig\b|\/FT\s*\/Sig\b/.test(text)) {
+                skip('Digitally signed PDF — kept original so the signature stays valid');
+            }
+            const hasForm = /\/AcroForm\b/.test(text) && /\/FT\s*\/(Tx|Btn|Ch)\b/.test(text);
+            const encrypted = /\/Encrypt\b/.test(text);
+
+            let best = null, note = '', gsProblem = '';
+
+            if (!hasForm) {
+                setProgress.stage('Loading PDF engine…');
+                setProgress(10);
+                const res = await runGhostscript(bytes.slice(), ghostscriptArgs(opts.preset));
+                setProgress.stage('');
+                const log = (res.log || []).join('\n');
+                setProgress.log(res.error ? 'ghostscript error: ' + res.error : `ghostscript rc=${res.rc} out=${res.out ? res.out.length : 0}`);
+                if (/requires a password/i.test(log)) skip('Password-protected PDF — kept original');
+                if (res.error) gsProblem = res.error;
+                else if (res.rc !== 0 || !res.out || res.out.length < 200 || /No pages will be processed/.test(log)) gsProblem = 'Ghostscript could not rewrite this PDF';
+                else {
+                    setProgress(75);
+                    let v;
+                    try { v = await verifyAndRepairPdf(bytes, res.out, opts); }
+                    catch (err) { console.warn('PDF verification failed', err); v = { ok: false, why: 'verification failed' }; }
+                    if (!v.ok) gsProblem = v.why;
+                    else if (v.repaired) setProgress.log(`text layer repaired on ${v.repaired} font(s)`);
+                    else {
+                        best = v.bytes;
+                        note = encrypted ? 'Optimized (copy restrictions removed)' : '';
+                    }
+                }
+                if (gsProblem) { console.warn('Ghostscript:', gsProblem, log); setProgress.log('ghostscript rejected: ' + gsProblem); }
+            }
+
+            if (hasForm) setProgress.log('form fields detected → pdf-lib only');
+            if (!best || best.length >= item.size) {
+                setProgress.log('pdf-lib pass');
+                setProgress(20);
+                try {
+                    const r = await optimizePdfWithPdfLib(bytes, opts, setProgress);
+                    if (!best || r.bytes.length < best.length) { best = r.bytes; note = r.note; }
+                } catch (err) {
+                    if (!best) {
+                        if (/encrypt/i.test(err.message)) skip('Encrypted PDF — kept original');
+                        skip(gsProblem ? 'This PDF could not be processed — kept original' : 'Could not parse this PDF — kept original');
+                    }
+                }
+                if (hasForm && best) note = (note ? note + ' · ' : '') + 'form fields preserved';
+            }
+
+            if (!best || best.length >= item.size) skip('PDF is already well optimized — kept original');
+            return { blob: new Blob([best], { type: 'application/pdf' }), outName: item.name, note };
+        }
+
+        // ---------- Blender .blend ----------
+        async function optimizeBlend(item, opts) {
+            if (!opts.compressContainers) skip('Blender compression is turned off in settings');
+            const head = await readHead(item.file, 7);
+            if (head[0] === 0x1F && head[1] === 0x8B) skip('.blend is already compressed (gzip)');
+            if (head[0] === 0x28 && head[1] === 0xB5 && head[2] === 0x2F && head[3] === 0xFD) skip('.blend is already compressed (Zstd)');
+            if (String.fromCharCode(...head) !== 'BLENDER') skip('Not a valid .blend file');
+            if (!('CompressionStream' in window)) skip('This browser lacks CompressionStream — try Chrome/Edge/Firefox');
+
+            const blob = await new Response(item.file.stream().pipeThrough(new CompressionStream('gzip'))).blob();
+            if (blob.size >= item.size) skip('Compression gave no gain — kept original');
+            return { blob: new Blob([blob], { type: 'application/octet-stream' }), outName: item.name, note: 'Gzip-compressed — opens directly in Blender' };
+        }
+
+        // ---------- ZIP-based containers (Office, design apps, e-books, 3MF, KMZ, ZIP…) ----------
+        async function optimizeZipContainer(item, opts, setProgress) {
+            if (!opts.compressContainers) skip('Document & archive compression is turned off in settings');
+            const head = await readHead(item.file, 4);
+            if (!(head[0] === 0x50 && head[1] === 0x4B)) skip(`This .${item.extension} isn't ZIP-based — kept original`);
+            let zip;
+            try { zip = await JSZip.loadAsync(item.file, { createFolders: false }); }
+            catch (_) { skip('Could not read archive (encrypted or damaged) — kept original'); }
+            setProgress(20);
+
+            const entries = Object.values(zip.files).filter(f => !f.dir);
+            if (Object.keys(zip.files).some(n => n.includes('\uFFFD'))) skip('Archive uses non-Unicode file names — kept original');
+            let imgs = 0;
+            for (let i = 0; i < entries.length; i++) {
+                const entry = entries[i];
+                if (/\.(jpe?g)$/i.test(entry.name)) {
+                    try {
+                        const data = await entry.async('uint8array');
+                        if (data.length > 20 * 1024) {
+                            const re = await reencodeJpegBytes(data, opts.jpegQ);
+                            if (re && re.length < data.length * 0.9) {
+                                zip.file(entry.name, re, { date: entry.date, createFolders: false });
+                                imgs++;
+                            }
+                        }
+                    } catch (_) {}
+                }
+                setProgress(20 + Math.round((i + 1) / entries.length * 50));
+            }
+
+            // EPUB / ODF / Krita / OpenRaster / XD / IDML need their "mimetype" entry first and uncompressed
+            if (zip.files['mimetype']) {
+                const mt = await zip.file('mimetype').async('uint8array');
+                zip.file('mimetype', mt, { compression: 'STORE', createFolders: false });
+            }
+
+            const blob = await zip.generateAsync(
+                { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 9 }, mimeType: item.file.type || 'application/zip' },
+                meta => setProgress(70 + Math.round(meta.percent * 0.25))
+            );
+            if (blob.size >= item.size) skip('Already tightly compressed — kept original');
+            return { blob, outName: item.name, note: imgs ? `${imgs} embedded image(s) recompressed` : '' };
+        }
+
+        // ---------- TAR → TAR.GZ ----------
+        async function optimizeTar(item, opts) {
+            if (!opts.compressContainers) skip('Archive compression is turned off in settings');
+            if (!('CompressionStream' in window)) skip('This browser lacks CompressionStream — try Chrome/Edge/Firefox');
+            const head = await readHead(item.file, 265);
+            if (bytesToLatin1(head.slice(257, 262)) !== 'ustar') skip('Not a TAR archive — kept original');
+            const blob = await new Response(item.file.stream().pipeThrough(new CompressionStream('gzip'))).blob();
+            if (blob.size >= item.size) skip('Contents are already compressed — kept original');
+            return { blob: new Blob([blob], { type: 'application/gzip' }), outName: item.name + '.gz', note: 'Packed as .tar.gz' };
+        }
+
+        // ---------- Fonts: TTF/OTF → WOFF2 ----------
+        let woff2Promise = null;
+        function loadWoff2() {
+            if (!woff2Promise) {
+                woff2Promise = (async () => {
+                    let src = null;
+                    for (const url of [libBase() + 'woff2/compress_binding.js', 'https://cdn.jsdelivr.net/npm/wawoff2@2.0.1/build/compress_binding.js']) {
+                        try { const r = await fetch(url); if (r.ok) { src = await r.text(); break; } } catch (_) {}
+                    }
+                    if (!src) throw new Error('Font engine could not load (offline?)');
+                    return await new Promise((resolve, reject) => {
+                        const mod = { onRuntimeInitialized: () => resolve(mod), onAbort: reject, print: () => {}, printErr: () => {} };
+                        // Run in its own scope so its global "Module" can't clash with other engines
+                        new Function('Module', src + '\n;return Module;')(mod);
+                    });
+                })().catch(err => { woff2Promise = null; throw err; });
+            }
+            return woff2Promise;
+        }
+
+        async function optimizeFont(item) {
+            const head = bytesToLatin1(await readHead(item.file, 4));
+            if (head === 'wOF2') skip('Already WOFF2');
+            if (head === 'wOFF') skip('WOFF fonts are already compressed');
+            if (!(head === '\x00\x01\x00\x00' || head === 'OTTO' || head === 'true')) skip('Unrecognized font file — kept original');
+            const W = await loadWoff2();
+            const out = W.compress(new Uint8Array(await item.file.arrayBuffer()));
+            if (!out || !out.length) throw new Error('WOFF2 conversion failed');
+            return { blob: new Blob([out], { type: 'font/woff2' }), outName: replaceExtension(item.name, 'woff2'), note: 'Converted to WOFF2 web font' };
+        }
+
+        // ---------- 3D: STL (ASCII → binary) ----------
+        async function optimizeStl(item) {
+            const size = item.size;
+            const head = await readHead(item.file, 84);
+            const triCount = new DataView(head.buffer).getUint32(80, true);
+            if (size === 84 + triCount * 50) skip('Binary STL is already compact');
+            const { text } = await readUtf8(item.file);
+            if (!/^\s*solid/i.test(text) || !/facet/i.test(text.slice(0, 2000))) skip('Unrecognized STL file — kept original');
+
+            const num = '([-+]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][-+]?\\d+)?)';
+            const re = new RegExp(`facet\\s+normal\\s+${num}\\s+${num}\\s+${num}\\s+outer\\s+loop\\s+vertex\\s+${num}\\s+${num}\\s+${num}\\s+vertex\\s+${num}\\s+${num}\\s+${num}\\s+vertex\\s+${num}\\s+${num}\\s+${num}\\s+endloop\\s+endfacet`, 'gi');
+            const tris = [];
+            let m;
+            while ((m = re.exec(text))) tris.push(m);
+            const declared = (text.match(/endfacet/gi) || []).length;
+            if (!tris.length || tris.length !== declared) skip('Could not parse every triangle — kept original');
+
+            const buf = new ArrayBuffer(84 + tris.length * 50);
+            const dv = new DataView(buf);
+            const header = 'Binary STL converted by OmniOpti';
+            for (let i = 0; i < header.length; i++) dv.setUint8(i, header.charCodeAt(i));
+            dv.setUint32(80, tris.length, true);
+            tris.forEach((t, i) => {
+                const o = 84 + i * 50;
+                for (let k = 0; k < 12; k++) dv.setFloat32(o + k * 4, parseFloat(t[k + 1]), true);
+                dv.setUint16(o + 48, 0, true);
+            });
+            return { blob: new Blob([buf], { type: 'model/stl' }), outName: item.name, note: 'ASCII → binary STL' };
+        }
+
+        // ---------- 3D: OBJ (comments, whitespace, number precision) ----------
+        async function optimizeObj(item, opts) {
+            const head = await readHead(item.file, 8192);
+            if (looksBinary(head)) skip('Binary file — kept original');
+            const decimals = { low: 6, balanced: 5, aggressive: 4 }[opts.preset];
+            const round = n => {
+                const v = parseFloat(n);
+                if (!isFinite(v)) return n;
+                let s = v.toFixed(decimals).replace(/\.?0+$/, '');
+                if (s === '-0') s = '0';
+                return s.length < n.length ? s : n;
+            };
+            const { text } = await readUtf8(item.file);
+            const out = text.split(/\r?\n/).map(line => {
+                line = line.trim();
+                if (!line || line[0] === '#') return null;
+                line = line.replace(/\s+/g, ' ');
+                if (/^(v|vn|vt|vp) /.test(line)) {
+                    const [cmd, ...nums] = line.split(' ');
+                    return cmd + ' ' + nums.map(round).join(' ');
+                }
+                return line;
+            }).filter(l => l !== null).join('\n') + '\n';
+            const blob = new Blob([out], { type: 'model/obj' });
+            if (blob.size >= item.size) skip('Already compact — kept original');
+            return { blob, outName: item.name, note: `Coordinates rounded to ${decimals} decimals` };
+        }
+
+        // ---------- 3D: GLB (glTF binary) ----------
+        async function optimizeGlb(item, opts, setProgress) {
+            const head = bytesToLatin1(await readHead(item.file, 4));
+            if (head !== 'glTF') skip('Not a GLB file — kept original');
+            const G = await loadLib('gltf');
+            await Promise.all([G.MeshoptDecoder.ready, G.MeshoptEncoder.ready]);
+            const io = new G.WebIO()
+                .registerExtensions(G.ALL_EXTENSIONS)
+                .registerDependencies({ 'meshopt.decoder': G.MeshoptDecoder, 'meshopt.encoder': G.MeshoptEncoder });
+
+            let doc;
+            try { doc = await io.readBinary(new Uint8Array(await item.file.arrayBuffer())); }
+            catch (err) {
+                if (/draco/i.test(err.message)) skip('Draco-compressed GLB — already optimized');
+                skip('Could not read this GLB — kept original');
+            }
+            setProgress(25);
+
+            const PRUNE = { keepLeaves: true, keepAttributes: true, keepExtras: true };   // keep anchors/hotspots & extra UV sets
+            const steps = [G.dedup(), G.prune(PRUNE), G.resample()];
+            if (opts.preset === 'aggressive') steps.push(G.quantize());
+            await doc.transform(...steps);
+            setProgress(45);
+
+            // Textures: resize + recompress (stay JPEG/PNG so every viewer can open the file)
+            const root = doc.getRoot();
+            // Only colour textures may become JPEG; data textures (normal, metal/rough, AO…) stay lossless PNG
+            const graph = doc.getGraph();
+            const isColorOnly = tex => {
+                const uses = graph.listParentEdges(tex).map(e => e.getName()).filter(n => /Texture$/.test(n));
+                return uses.length > 0 && uses.every(n => n === 'baseColorTexture' || n === 'emissiveTexture');
+            };
+            const cap = opts.downscale ? (opts.preset === 'aggressive' ? 1024 : 2048) : 4096;
+            const textures = root.listTextures();
+            let texDone = 0;
+            for (let i = 0; i < textures.length; i++) {
+                const tex = textures[i];
+                const mime = tex.getMimeType(), img = tex.getImage();
+                if (!img || !/image\/(jpeg|png)/.test(mime)) continue;
+                try {
+                    const bmp = await decodeImage(new Blob([img], { type: mime }), { colorSpaceConversion: 'none', premultiplyAlpha: 'none' });
+                    if (!bmp) continue;
+                    const { canvas, resized } = drawToCanvas(bmp, cap);
+                    if (bmp.close) bmp.close();
+                    let blob;
+                    const isColor = isColorOnly(tex);
+                    if (mime === 'image/png' && (!isColor || canvasHasAlpha(canvas))) {
+                        blob = await encodePng(canvas, isColor ? opts.pngColors : 0);
+                    } else {
+                        blob = await canvasToBlob(canvas, 'image/jpeg', Math.max(opts.jpegQ, 0.8));
+                    }
+                    if (blob.size < img.length || resized) {
+                        tex.setImage(new Uint8Array(await blob.arrayBuffer()));
+                        if (blob.type !== mime) {
+                            tex.setMimeType(blob.type);
+                            if (tex.getURI()) tex.setURI(tex.getURI().replace(/\.png$/i, '.jpg'));
+                        }
+                        texDone++;
+                    }
+                } catch (err) { console.warn('Texture skipped', err); }
+                setProgress(45 + Math.round((i + 1) / textures.length * 40));
+            }
+
+            await doc.transform(G.prune(PRUNE), G.unpartition());
+            const out = await io.writeBinary(doc);
+            if (out.length >= item.size) skip('GLB is already well optimized — kept original');
+            const notes = [];
+            if (texDone) notes.push(`${texDone} texture(s) recompressed`);
+            if (opts.preset === 'aggressive') notes.push('meshes quantized');
+            return { blob: new Blob([out], { type: 'model/gltf-binary' }), outName: item.name, note: notes.join(' · ') };
+        }
+
+        // ---------- Video & audio ----------
+        // 1) Mediabunny + WebCodecs: hardware-accelerated, fast. Modern containers & codecs.
+        // 2) ffmpeg.wasm: software fallback for legacy formats (AVI, WMV, FLV, MPEG, WMA, AIFF…)
+        //    and for codecs this browser can't decode/encode. Slower, but handles almost anything.
+        let mediaChain = Promise.resolve();
+        function withMediaLock(fn) {          // encoders work best one job at a time
+            const run = mediaChain.then(fn, fn);
+            mediaChain = run.catch(() => {});
+            return run;
+        }
+
+        class NeedFallback extends Error {}
+        const even = n => Math.max(2, Math.round(n / 2) * 2);
+        const AUDIO_KBPS = { low: 192, balanced: 128, aggressive: 96 };
+        const VIDEO_CRF = { low: 23, balanced: 27, aggressive: 31 };
+        const videoCap = opts => opts.downscale ? (opts.preset === 'aggressive' ? 720 : 1080) : null;
+
+        async function optimizeMedia(item, opts, setProgress) {
+            const ext = item.extension;
+            if (ext === 'ts') {
+                const h = await readHead(item.file, 189);
+                if (h[0] !== 0x47 || (h.length > 188 && h[188] !== 0x47)) skip('TypeScript/text file — kept original');
+            }
+            let reason = '';
+            const group = groupForExt(ext);
+            if (!group.legacy && ('AudioDecoder' in window || 'VideoDecoder' in window)) {
+                setProgress.log('engine: webcodecs');
+                try {
+                    return await optimizeWithMediabunny(item, opts, setProgress);
+                } catch (err) {
+                    if (!(err instanceof NeedFallback)) throw err;
+                    reason = err.message;
+                    setProgress.log('fallback → ffmpeg: ' + reason);
+                }
+            } else setProgress.log(group.legacy ? 'engine: ffmpeg (legacy format)' : 'engine: ffmpeg (no WebCodecs)');
+            return optimizeWithFfmpeg(item, opts, setProgress, reason);
+        }
+
+        async function optimizeWithMediabunny(item, opts, setProgress) {
+            const ext = item.extension;
+            let MB;
+            try { MB = await loadLib('mediabunny'); } catch (_) { throw new NeedFallback('media engine unavailable'); }
+            setProgress(8);
+
+            const input = new MB.Input({ formats: MB.ALL_FORMATS, source: new MB.BlobSource(item.file) });
+            try {
+                return await convertWithMediabunny(MB, input, item, opts, setProgress);
+            } finally {
+                try { input.dispose(); } catch (_) {}
+            }
+        }
+
+        async function convertWithMediabunny(MB, input, item, opts, setProgress) {
+            const ext = item.extension;
+            let vTrack, aTrack;
+            try {
+                await input.getFormat();
+                vTrack = await input.getPrimaryVideoTrack();
+                aTrack = await input.getPrimaryAudioTrack();
+            } catch (_) {
+                throw new NeedFallback('container not supported by WebCodecs path');
+            }
+            if (!vTrack && !aTrack) skip('No audio or video tracks found');
+
+            const q = { low: MB.QUALITY_HIGH, balanced: MB.QUALITY_MEDIUM, aggressive: MB.QUALITY_LOW }[opts.preset];
+            const audioKbps = AUDIO_KBPS[opts.preset] * 1000;
+            let format, outExt, mime, video, audio, note = '';
+
+            if (vTrack) {
+                if (!('VideoEncoder' in window)) throw new NeedFallback('no WebCodecs video encoder');
+                if (!(await vTrack.canDecode())) throw new NeedFallback(`${vTrack.codec || 'video'} not decodable here`);
+
+                let w = vTrack.displayWidth, h = vTrack.displayHeight;
+                const cap = videoCap(opts);
+                let resized = false;
+                if (cap && Math.min(w, h) > cap) {
+                    const s = cap / Math.min(w, h);
+                    w = even(w * s); h = even(h * s); resized = true;
+                }
+                // MP4/H.264 is the universal target. WebM inputs may stay WebM/VP9 if H.264 isn't encodable.
+                const candidates = ext === 'webm' ? ['avc', 'vp9', 'av1'] : ['avc', 'hevc'];
+                const vcodec = await MB.getFirstEncodableVideoCodec(candidates, { width: w, height: h, bitrate: q });
+                if (!vcodec) throw new NeedFallback('no hardware H.264 encoder');
+
+                video = { codec: vcodec, bitrate: q, forceTranscode: true, keyFrameInterval: 5 };
+                if (resized) { Object.assign(video, { width: w, height: h, fit: 'contain' }); note = `Resized to ${w}×${h}. `; }
+                setProgress.log(`video ${vTrack.codec} ${vTrack.displayWidth}x${vTrack.displayHeight} → ${vcodec}`);
+
+                const useMp4 = vcodec === 'avc' || vcodec === 'hevc';
+                if (aTrack) {
+                    if (!(await aTrack.canDecode())) throw new NeedFallback(`${aTrack.codec || 'audio'} not decodable here`);
+                    const acodec = await MB.getFirstEncodableAudioCodec(useMp4 ? ['aac', 'opus'] : ['opus'], {
+                        numberOfChannels: aTrack.numberOfChannels, sampleRate: aTrack.sampleRate, bitrate: audioKbps
+                    });
+                    if (!acodec) throw new NeedFallback('no audio encoder');
+                    audio = { codec: acodec, bitrate: audioKbps };
+                }
+                if (useMp4) { format = new MB.Mp4OutputFormat({ fastStart: 'in-memory' }); outExt = 'mp4'; mime = 'video/mp4'; }
+                else { format = new MB.WebMOutputFormat(); outExt = 'webm'; mime = 'video/webm'; note += `Encoded as ${vcodec.toUpperCase()}. `; }
+                if (vcodec === 'hevc') note += 'Encoded as HEVC. ';
+            } else {
+                if (!(await aTrack.canDecode())) throw new NeedFallback(`${aTrack.codec || 'audio'} not decodable here`);
+                const encOpts = { numberOfChannels: aTrack.numberOfChannels, sampleRate: aTrack.sampleRate, bitrate: audioKbps };
+
+                if (['ogg', 'oga', 'opus', 'webm', 'weba'].includes(ext) && await MB.canEncodeAudio('opus', encOpts)) {
+                    format = new MB.OggOutputFormat(); outExt = ext === 'opus' ? 'opus' : 'ogg'; mime = 'audio/ogg';
+                    audio = { codec: 'opus', bitrate: audioKbps, forceTranscode: true };
+                } else if (['m4a', 'm4b', 'aac', 'mp4'].includes(ext) && await MB.canEncodeAudio('aac', encOpts)) {
+                    format = new MB.Mp4OutputFormat({ fastStart: 'in-memory' }); outExt = ext === 'm4b' ? 'm4b' : 'm4a'; mime = 'audio/mp4';
+                    audio = { codec: 'aac', bitrate: audioKbps, forceTranscode: true };
+                } else {
+                    if (!(await MB.canEncodeAudio('mp3'))) {
+                        try {
+                            const enc = await loadLib('mp3enc');
+                            if (!window.__mp3Registered) { enc.registerMp3Encoder(); window.__mp3Registered = true; }
+                        } catch (_) { throw new NeedFallback('MP3 encoder unavailable'); }
+                    }
+                    format = new MB.Mp3OutputFormat(); outExt = 'mp3'; mime = 'audio/mpeg';
+                    audio = { codec: 'mp3', bitrate: audioKbps, forceTranscode: true };
+                    if (ext !== 'mp3') note = `Converted ${ext.toUpperCase()} → MP3 ${audioKbps / 1000} kbps. `;
+                }
+            }
+
+            const output = new MB.Output({ format, target: new MB.BufferTarget() });
+            const conversion = await MB.Conversion.init({
+                input, output, video, audio,
+                tracks: 'primary',
+                showWarnings: false,
+                ...(opts.stripMeta ? { tags: {} } : {})
+            });
+            if (!conversion.isValid || (vTrack && conversion.discardedTracks.some(d => d.track.type === 'video'))) {
+                throw new NeedFallback(conversion.discardedTracks.map(d => d.reason).join(', ') || 'unsupported codec');
+            }
+
+            conversion.onProgress = p => setProgress(10 + p * 88);
+            try {
+                await conversion.execute();
+            } catch (err) {
+                throw new NeedFallback('WebCodecs encode failed: ' + (err.message || err));
+            }
+
+            const blob = new Blob([output.target.buffer], { type: mime });
+            if (blob.size >= item.size) skip('Already efficiently encoded — kept original');
+            return { blob, outName: replaceExtension(item.name, outExt), note: note.trim() };
+        }
+
+        // ----- ffmpeg.wasm (software) -----
+        let ffmpegPromise = null;
+        function getFfmpeg(setStage) {
+            if (!ffmpegPromise) {
+                ffmpegPromise = (async () => {
+                    setStage('Downloading video engine (≈10 MB, once)…');
+                    await loadLib('ffmpeg');
+                    const base = libBase() + 'ffmpeg/';
+                    const wasm = await fetchMaybeGzip(base + 'ffmpeg-core.wasm.gz');
+                    const wasmURL = URL.createObjectURL(new Blob([wasm], { type: 'application/wasm' }));
+                    const ff = new FFmpegWASM.FFmpeg();
+                    await ff.load({ coreURL: base + 'ffmpeg-core.js', wasmURL });
+                    return ff;
+                })().catch(err => { ffmpegPromise = null; throw err; });
+            }
+            return ffmpegPromise;
+        }
+
+        let ffSeq = 0;
+        async function optimizeWithFfmpeg(item, opts, setProgress, reason) {
+            if (typeof WebAssembly === 'undefined' || !('Worker' in window)) skip('This browser cannot run the video engine');
+            let ff;
+            try { ff = await getFfmpeg(setProgress.stage); }
+            catch (err) {
+                console.error(err);
+                skip(`Video engine unavailable${location.protocol === 'file:' ? ' when opened from disk — use the hosted site' : ''} — kept original`);
+            }
+            setProgress.stage('Encoding (software encoder — slower)…');
+            setProgress(10);
+
+            const isVideo = item.typeCategory === 'video';
+            const dir = `/job${++ffSeq}`;
+            const inPath = `${dir}/${item.file.name}`;
+            const kbps = AUDIO_KBPS[opts.preset];
+            let outExt, mime, note = '';
+            const args = ['-hide_banner', '-nostdin', '-y', '-i', inPath];
+
+            if (isVideo) {
+                outExt = 'mp4'; mime = 'video/mp4';
+                args.push('-map', '0:v:0', '-map', '0:a:0?', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', String(VIDEO_CRF[opts.preset]),
+                    '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', kbps + 'k', '-movflags', '+faststart');
+                const cap = videoCap(opts);
+                // keep aspect, only shrink when the short side exceeds the cap, keep dimensions even
+                const scale = cap
+                    ? `scale='if(gte(iw,ih),-2,min(${cap},iw))':'if(gte(iw,ih),min(${cap},ih),-2)',scale=trunc(iw/2)*2:trunc(ih/2)*2`
+                    : 'scale=trunc(iw/2)*2:trunc(ih/2)*2';
+                args.push('-vf', scale);
+            } else {
+                const toAac = ['m4a', 'm4b', 'aac'].includes(item.extension);
+                outExt = toAac ? 'm4a' : 'mp3'; mime = toAac ? 'audio/mp4' : 'audio/mpeg';
+                args.push('-map', '0:a:0', '-vn', '-c:a', toAac ? 'aac' : 'libmp3lame', '-b:a', kbps + 'k');
+                if (!toAac && item.extension !== 'mp3') note = `Converted ${item.extension.toUpperCase()} → MP3 ${kbps} kbps. `;
+            }
+            if (opts.stripMeta) args.push('-map_metadata', '-1');
+            const outPath = `/out${ffSeq}.${outExt}`;
+            args.push(outPath);
+
+            const logs = [];
+            const onLog = ({ message }) => { logs.push(message); if (logs.length > 60) logs.shift(); };
+            const onProgress = ({ progress }) => { if (progress >= 0 && progress <= 1) setProgress(10 + progress * 88); };
+            ff.on('log', onLog);
+            ff.on('progress', onProgress);
+            let data = null, code = -1;
+            try {
+                await ff.createDir(dir);
+                await ff.mount('WORKERFS', { files: [item.file] }, dir);   // streams from disk — no full copy in memory
+                try {
+                    code = await ff.exec(args);
+                } catch (err) {
+                    // core crashed (e.g. out of memory) — throw the instance away so the next file gets a fresh one
+                    try { ff.terminate(); } catch (_) {}
+                    ffmpegPromise = null;
+                    throw new Error('Video engine ran out of memory on this file');
+                }
+                if (code === 0) data = await ff.readFile(outPath);
+            } finally {
+                ff.off('log', onLog);
+                ff.off('progress', onProgress);
+                try { await ff.unmount(dir); } catch (_) {}
+                try { await ff.deleteDir(dir); } catch (_) {}
+                try { await ff.deleteFile(outPath); } catch (_) {}
+            }
+            if (code !== 0 || !data) {
+                console.warn('ffmpeg log:\n' + logs.join('\n'));
+                setProgress.log(`ffmpeg exit ${code}: ` + logs.slice(-4).join(' / '));
+                if (logs.some(l => /Invalid data found when processing input|moov atom not found|could not find codec parameters/i.test(l))) {
+                    skip('Unrecognized or damaged media file — kept original');
+                }
+                const tail = logs.reverse().find(l => /error|invalid|not supported|could not/i.test(l)) || '';
+                throw new Error('Could not convert this file' + (tail ? `: ${tail.trim().slice(0, 120)}` : ''));
+            }
+            const blob = new Blob([data], { type: mime });
+            if (blob.size >= item.size) skip('Already efficiently encoded — kept original');
+            if (isVideo && item.extension !== 'mp4') note += `Converted ${item.extension.toUpperCase()} → MP4. `;
+            return { blob, outName: replaceExtension(item.name, outExt), note: note.trim() };
+        }
+
+        // ---------- Router ----------
+        async function runOptimizer(item, opts, setProgress) {
+            const ext = item.extension;
+            const group = groupForExt(ext);
+            if (!group) {
+                const kept = KEPT_AS_IS[ext];
+                skip(kept ? kept.why : 'No optimizer for this file type — kept original');
+            }
+            setProgress.log('handler: ' + group.title);
+            if (group.media) {
+                if (!opts.media) skip('Video & audio optimization is turned off in settings');
+                return withMediaLock(() => optimizeMedia(item, opts, setProgress));
+            }
+            return group.run(item, opts, setProgress);
+        }
+
+        // =====================================================================
+        //  UI
+        // =====================================================================
+
+        function applyPresetUI() {
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                const active = btn.id === `preset-${currentPreset}`;
+                btn.className = 'preset-btn py-2 text-xs font-medium rounded-lg transition-all ' +
+                    (active ? 'text-white bg-brand-600 shadow' : 'text-slate-400 hover:text-white');
+            });
+            document.getElementById('presetHint').innerText = PRESET_HINTS[currentPreset];
+            document.getElementById('presetChip').innerText = currentPreset[0].toUpperCase() + currentPreset.slice(1);
+        }
+
+        function setPreset(preset) {
+            currentPreset = preset;
+            applyPresetUI();
+            saveSettings();
+        }
+
+        function statusBadge(item) {
+            const savedPercent = item.optimizedSize ? Math.round((1 - item.optimizedSize / item.size) * 100) : 0;
+            switch (item.status) {
+                case 'ready':
+                    return `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">Ready</span>`;
+                case 'optimizing':
+                    return `<div class="flex items-center gap-2">
+                                <div class="w-20 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                    <div id="bar_${item.id}" class="bg-brand-500 h-full transition-all duration-200" style="width:${item.progress}%"></div>
+                                </div>
+                                <span id="pct_${item.id}" class="text-[11px] font-semibold text-brand-400 w-8 text-right">${item.progress}%</span>
+                            </div>`;
+                case 'done':
+                    return `<span class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">−${savedPercent}%</span>`;
+                case 'skipped':
+                    return `<span class="text-[11px] font-semibold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">Kept</span>`;
+                case 'error':
+                    return `<span class="text-[11px] font-semibold text-rose-300 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">Failed</span>`;
+            }
+            return '';
+        }
+
+        const iconBtn = (onclick, title, icon, tone) => `
+            <button onclick="${onclick}" title="${title}" aria-label="${title}"
+                class="w-8 h-8 rounded-lg flex items-center justify-center transition-all ${tone}">
+                <i class="fa-solid ${icon} text-xs"></i>
+            </button>`;
+
+        function renderQueue() {
+            const container = document.getElementById('fileListContainer');
+            document.getElementById('queuePanel').classList.toggle('hidden', filesQueue.length === 0);
+
+            container.innerHTML = filesQueue.map(item => {
+                const meta = getCategoryIcon(item.typeCategory);
+                const name = escapeHtml(item.name);
+                const renamed = item.outName && item.outName !== item.name;
+                const noteColor = item.status === 'error' ? 'text-rose-400' : item.status === 'skipped' ? 'text-amber-300/80' : 'text-slate-500';
+
+                let actions = '';
+                if (item.status === 'error') actions += iconBtn(`optimizeSingleFile('${item.id}')`, 'Retry', 'fa-rotate-right', 'text-brand-400 hover:bg-brand-600 hover:text-white');
+                if (item.status === 'done') actions += iconBtn(`downloadSingleFile('${item.id}')`, 'Download', 'fa-download', 'bg-emerald-600/15 text-emerald-400 hover:bg-emerald-600 hover:text-white');
+                if (item.status === 'done' || item.status === 'skipped') actions += iconBtn(`resetFile('${item.id}')`, 'Re-optimize with current settings', 'fa-rotate-left', 'hidden sm:flex text-slate-500 hover:text-white hover:bg-white/5');
+                if (item.status !== 'optimizing') actions += iconBtn(`removeFile('${item.id}')`, 'Remove', 'fa-xmark', 'text-slate-500 hover:text-rose-400 hover:bg-rose-500/10');
+
+                return `
+                <div class="flex items-center gap-3 p-2.5 rounded-2xl bg-darkbg/60 border border-darkborder">
+                    ${item.thumbnail
+                        ? `<img src="${item.thumbnail}" alt="" class="w-10 h-10 rounded-xl object-cover border border-darkborder flex-shrink-0 bg-slate-800" />`
+                        : `<div class="w-10 h-10 rounded-xl ${meta.bg} ${meta.color} flex items-center justify-center flex-shrink-0"><i class="fa-solid ${meta.icon}"></i></div>`}
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-white truncate" title="${name}">${name}</p>
+                        <p class="text-[11px] text-slate-500 truncate">
+                            ${formatBytes(item.size)}
+                            ${item.status === 'done' ? `<span class="text-emerald-400"> → ${formatBytes(item.optimizedSize)}</span>` : ''}
+                            ${renamed && item.status === 'done' ? `<span class="text-sky-400"> · .${escapeHtml(getExtension(item.outName))}</span>` : ''}
+                            ${item.note ? `<span class="${noteColor}" title="${escapeHtml(item.note)}"> · ${escapeHtml(item.note)}</span>` : ''}
+                            ${item.status === 'optimizing' ? `<span id="stage_${item.id}" class="text-brand-400">${item.stage ? ' · ' + escapeHtml(item.stage) : ''}</span>` : ''}
+                        </p>
+                    </div>
+                    <div class="flex-shrink-0">${statusBadge(item)}</div>
+                    <div class="flex items-center flex-shrink-0">${actions}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function updateProgressUI(item) {
+            const bar = document.getElementById(`bar_${item.id}`);
+            const pct = document.getElementById(`pct_${item.id}`);
+            if (bar) bar.style.width = item.progress + '%';
+            if (pct) pct.innerText = item.progress + '%';
+        }
+
+        async function optimizeSingleFile(id, { silent = false } = {}) {
+            const item = filesQueue.find(f => f.id === id);
+            if (!item || item.status === 'optimizing') return;
+            if (silent && item.status !== 'ready' && item.status !== 'error') return;   // already handled (e.g. retried manually)
+
+            item.status = 'optimizing';
+            item.progress = 3;
+            item.note = '';
+            renderQueue();
+            updateStats();
+            await nextFrame();
+
+            const setProgress = p => { item.progress = Math.max(item.progress, Math.min(99, Math.round(p))); updateProgressUI(item); };
+            item.trace = [];
+            setProgress.log = msg => { item.trace.push(String(msg).slice(0, 200)); };
+            setProgress.stage = text => {
+                item.stage = text;
+                const el = document.getElementById(`stage_${item.id}`);
+                if (el) el.innerText = text ? ' · ' + text : '';
+            };
+
+            const opts = getOptions();
+            const t0 = performance.now();
+            try {
+                const result = await runOptimizer(item, opts, setProgress);
+                item.compressedBlob = result.blob;
+                item.optimizedSize = result.blob.size;
+                item.outName = result.outName || item.name;
+                item.note = result.note || '';
+                item.status = 'done';
+                addLifetime(item.size - item.optimizedSize);
+            } catch (err) {
+                item.compressedBlob = item.file;
+                item.optimizedSize = null;
+                item.outName = item.name;
+                if (err instanceof SkipError) {
+                    item.status = 'skipped';
+                    item.note = err.message;
+                } else {
+                    console.error(err);
+                    item.status = 'error';
+                    item.note = err.message || 'Unexpected error';
+                    if (err.stack) setProgress.log('stack: ' + err.stack.split('\n').slice(0, 3).join(' | '));
+                }
+            }
+            logFileResult(item, opts, performance.now() - t0);
+            item.progress = 100;
+            item.stage = '';
+
+            if (!filesQueue.includes(item)) return;
+            updateStats();
+            renderQueue();
+            if (!silent && item.status === 'done') showToast(`Saved ${formatBytes(item.size - item.optimizedSize)} on ${item.outName}`);
+        }
+
+        async function optimizeAllFiles() {
+            if (isBatchRunning) return;
+            const readyFiles = filesQueue.filter(f => f.status === 'ready' || f.status === 'error');
+            if (readyFiles.length === 0) {
+                if (filesQueue.length === 0) fileInput.click();
+                return;
+            }
+
+            isBatchRunning = true;
+            updateStats();
+
+            const CONCURRENCY = Math.min(3, navigator.hardwareConcurrency || 2);
+            const queue = readyFiles.map(f => f.id);
+            await Promise.all(Array.from({ length: CONCURRENCY }, async () => {
+                while (queue.length) await optimizeSingleFile(queue.shift(), { silent: true });
+            }));
+
+            isBatchRunning = false;
+            updateStats();
+
+            const batch = readyFiles.filter(f => filesQueue.includes(f));
+            const done = batch.filter(f => f.status === 'done');
+            const saved = done.reduce((a, f) => a + (f.size - f.optimizedSize), 0);
+            const failed = batch.filter(f => f.status === 'error').length;
+
+            if (done.length) {
+                if (window.confetti) confetti({ particleCount: 80, spread: 70, origin: { y: 0.7 } });
+                showToast(`Optimized ${done.length} file${done.length === 1 ? '' : 's'} · saved ${formatBytes(saved)}${failed ? ` · ${failed} failed` : ''}`);
+            } else {
+                showToast(failed ? `${failed} file(s) failed to optimize` : 'Nothing could be reduced further', 'warning');
+            }
+        }
+
+        function triggerDownload(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function downloadSingleFile(id) {
+            const item = filesQueue.find(f => f.id === id);
+            if (!item || !item.compressedBlob) return;
+            triggerDownload(item.compressedBlob, item.outName);
+        }
+
+        async function downloadAllZip() {
+            const completed = filesQueue.filter(f => f.status === 'done' || f.status === 'skipped');
+            if (completed.length === 0) return;
+            if (completed.length === 1) return triggerDownload(completed[0].compressedBlob, completed[0].outName);
+
+            const total = completed.reduce((a, f) => a + f.compressedBlob.size, 0);
+            if (total > 3.8 * 1024 ** 3) { showToast('Over 4 GB — too big for one ZIP, download files individually', 'warning'); return; }
+            showToast('Packing ZIP…');
+            const zip = new JSZip();
+            const used = new Set();
+            completed.forEach(item => {
+                let name = item.outName, n = 1;
+                while (used.has(name.toLowerCase())) {
+                    const i = item.outName.lastIndexOf('.');
+                    name = i > 0 ? `${item.outName.slice(0, i)} (${n})${item.outName.slice(i)}` : `${item.outName} (${n})`;
+                    n++;
+                }
+                used.add(name.toLowerCase());
+                zip.file(name, item.compressedBlob, { compression: 'STORE' });
+            });
+
+            const content = await zip.generateAsync({ type: 'blob' });
+            triggerDownload(content, `OmniOpti_${new Date().toISOString().slice(0, 10)}.zip`);
+        }
+
+        function resetFile(id) {
+            const item = filesQueue.find(f => f.id === id);
+            if (!item) return;
+            Object.assign(item, { status: 'ready', optimizedSize: null, compressedBlob: null, outName: item.name, note: '', progress: 0 });
+            updateStats();
+            renderQueue();
+        }
+
+        function removeFile(id) {
+            const item = filesQueue.find(f => f.id === id);
+            if (!item || item.status === 'optimizing') return;
+            if (item.thumbnail) URL.revokeObjectURL(item.thumbnail);
+            filesQueue = filesQueue.filter(f => f.id !== id);
+            updateStats();
+            renderQueue();
+        }
+
+        function clearAllFiles() {
+            if (isBatchRunning) { showToast('Wait for the current batch to finish', 'warning'); return; }
+            filesQueue.forEach(f => f.thumbnail && URL.revokeObjectURL(f.thumbnail));
+            filesQueue = [];
+            updateStats();
+            renderQueue();
+        }
+
+        function updateStats() {
+            const totalOrig = filesQueue.reduce((acc, f) => acc + f.size, 0);
+            const totalOpt = filesQueue.reduce((acc, f) => acc + (f.optimizedSize || f.size), 0);
+            const savedPct = totalOrig > 0 ? Math.round(((totalOrig - totalOpt) / totalOrig) * 100) : 0;
+            const ready = filesQueue.filter(f => f.status === 'ready' || f.status === 'error').length;
+            const finished = filesQueue.filter(f => f.status === 'done' || f.status === 'skipped').length;
+            const hasFiles = filesQueue.length > 0;
+
+            // Account sheet stats
+            document.getElementById('statTotalFiles').innerText = filesQueue.length;
+            document.getElementById('statOriginalSize').innerText = formatBytes(totalOrig);
+            document.getElementById('statOptimizedSize').innerText = formatBytes(totalOpt);
+            document.getElementById('statSavedPercent').innerText = `${savedPct}%`;
+
+            // Queue header
+            document.getElementById('queueSummary').innerHTML = hasFiles
+                ? `${filesQueue.length} file${filesQueue.length === 1 ? '' : 's'} · ${formatBytes(totalOrig)}` +
+                  (totalOpt < totalOrig ? ` → <span class="text-emerald-400 font-medium">${formatBytes(totalOpt)} (−${savedPct}%)</span>` : '')
+                : '';
+            document.getElementById('downloadZipBtn').disabled = finished === 0;
+
+            // Dropzone shrinks to an "add more" bar once there's a queue
+            dropzone.classList.toggle('min-h-[340px]', !hasFiles);
+            dropzone.classList.toggle('p-10', !hasFiles);
+            dropzone.classList.toggle('sm:p-14', !hasFiles);
+            dropzone.classList.toggle('p-5', hasFiles);
+            document.getElementById('dzIcon').classList.toggle('hidden', hasFiles);
+            document.getElementById('dzTitle').innerText = hasFiles ? 'Drop more files' : 'Drop files to optimize';
+            document.getElementById('dzTitle').classList.toggle('text-2xl', !hasFiles);
+            document.getElementById('dzTitle').classList.toggle('text-base', hasFiles);
+
+            // Main button
+            const btn = document.getElementById('optimizeAllBtn');
+            const label = document.getElementById('optimizeLabel');
+            btn.disabled = isBatchRunning || (hasFiles && ready === 0);
+            btn.querySelector('i').className = isBatchRunning ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-bolt';
+            if (!hasFiles) { label.innerText = 'Optimize'; btn.disabled = true; }
+            else if (isBatchRunning) label.innerText = 'Optimizing…';
+            else if (ready) label.innerText = `Optimize ${ready} file${ready === 1 ? '' : 's'}`;
+            else label.innerText = 'All done';
+        }
+
+        let toastTimer;
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = message;
+            document.getElementById('toastIcon').className = type === 'warning'
+                ? 'fa-solid fa-triangle-exclamation text-amber-400 text-lg'
+                : 'fa-solid fa-circle-check text-emerald-400 text-lg';
+            toast.classList.remove('translate-y-6', 'opacity-0');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.add('translate-y-6', 'opacity-0'), 3000);
+        }
+
+        window.addEventListener('beforeunload', e => {
+            if (filesQueue.some(f => f.status === 'done' || f.status === 'optimizing')) { e.preventDefault(); e.returnValue = ''; }
+        });
+
+        // ---------- Init ----------
+        if (TEST_MODE) document.getElementById('testBadge').classList.remove('hidden');
+
+        // Self-test: ?test&selftest loads the sample files from diag/samples/ and optimizes them all.
+        // Results go to the diagnostics log (diag/log.php) with file names.
+        async function runSelfTest() {
+            try {
+                const manifest = await (await fetch('diag/samples/manifest.json', { cache: 'no-store' })).json();
+                const only = (location.search.match(/[?&]only=([^&]+)/) || [])[1];
+                const names = only ? manifest.filter(n => decodeURIComponent(only).split(',').some(x => n.endsWith('.' + x) || n === x)) : manifest;
+                showToast(`Self-test: loading ${names.length} sample files…`);
+                const files = [];
+                for (const n of names) {
+                    const r = await fetch('diag/samples/' + encodeURIComponent(n), { cache: 'no-store' });
+                    if (r.ok) files.push(new File([await r.blob()], n));
+                }
+                processFiles(files);
+                await optimizeAllFiles();
+                logEvent({ type: 'selftest', note: `done: ${filesQueue.filter(f => f.status === 'done').length}/${filesQueue.length}` });
+                flushDiag();
+                document.title = 'SELFTEST DONE · ' + document.title;
+            } catch (err) {
+                showToast('Self-test failed: ' + err.message, 'warning');
+            }
+        }
+        if (TEST_MODE && /[?&]selftest\b/.test(location.search)) runSelfTest();
+        loadSettings();
+        updateStats();
+    </script>
+</body>
+</html>
