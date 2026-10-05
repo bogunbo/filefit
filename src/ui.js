@@ -115,6 +115,10 @@
             const t0 = performance.now();
             try {
                 const result = await runOptimizer(item, opts, setProgress);
+                // Same format, same name and under 0.5% smaller isn't worth replacing the original
+                if (result.outName === item.name && result.blob.size > item.size * 0.995 && !/Resized/.test(result.note || '')) {
+                    throw new SkipError('Already optimized (less than 0.5% smaller) — kept original');
+                }
                 item.compressedBlob = result.blob;
                 item.optimizedSize = result.blob.size;
                 item.outName = result.outName || item.name;

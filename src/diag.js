@@ -3,7 +3,7 @@
         //  Sends metadata only (type, size, result, timings, engine trace) — never file contents.
         //  File names are included only in Test mode (?test in the URL).
         // =====================================================================
-        const APP_VERSION = '4.1';
+        const APP_VERSION = '4.2';
         const DIAG_ENDPOINT = 'diag/log.php';
         const TEST_MODE = /[?&]test\b/.test(location.search);
         const SESSION_ID = Math.random().toString(36).slice(2, 10);

@@ -435,7 +435,7 @@
         }
 
         const JSON_EXTS = ['json', 'geojson', 'topojson', 'webmanifest', 'map', 'har', 'gltf', 'babylon'];
-        const XML_EXTS = ['xml', 'kml', 'gpx', 'dae', 'xliff', 'xlf', 'rss', 'atom', 'plist', 'xsd'];
+        const XML_EXTS = ['xml', 'kml', 'gpx', 'dae', 'x3d', 'xliff', 'xlf', 'rss', 'atom', 'plist', 'xsd'];
 
         async function optimizeCode(item) {
             const ext = item.extension;

@@ -450,21 +450,57 @@
         }
 
         // ---------- 3D: GLB (glTF binary) ----------
-        async function optimizeGlb(item, opts, setProgress) {
-            const head = bytesToLatin1(await readHead(item.file, 4));
-            if (head !== 'glTF') skip('Not a GLB file — kept original');
+        async function gltfIO() {
             const G = await loadLib('gltf');
             await Promise.all([G.MeshoptDecoder.ready, G.MeshoptEncoder.ready]);
             const io = new G.WebIO()
                 .registerExtensions(G.ALL_EXTENSIONS)
                 .registerDependencies({ 'meshopt.decoder': G.MeshoptDecoder, 'meshopt.encoder': G.MeshoptEncoder });
+            return { G, io };
+        }
 
+        async function optimizeGlb(item, opts, setProgress) {
+            const head = bytesToLatin1(await readHead(item.file, 4));
+            if (head !== 'glTF') skip('Not a GLB file — kept original');
+            const { G, io } = await gltfIO();
             let doc;
             try { doc = await io.readBinary(new Uint8Array(await item.file.arrayBuffer())); }
             catch (err) {
                 if (/draco/i.test(err.message)) skip('Draco-compressed GLB — already optimized');
                 skip('Could not read this GLB — kept original');
             }
+            const r = await optimizeGltfDocument(doc, G, io, opts, setProgress);
+            if (r.out.length >= item.size) skip('GLB is already well optimized — kept original');
+            return { blob: new Blob([r.out], { type: 'model/gltf-binary' }), outName: item.name, note: r.notes.join(' · ') };
+        }
+
+        // .gltf: self-contained (embedded data: URIs) → optimized GLB. With external .bin/textures → JSON minify only.
+        async function optimizeGltf(item, opts, setProgress) {
+            const { text } = await readUtf8(item.file);
+            let json;
+            try { json = JSON.parse(text); } catch (_) { skip('Invalid glTF JSON — kept original'); }
+            const uris = [...(json.buffers || []), ...(json.images || [])].map(x => x.uri).filter(Boolean);
+            const external = uris.filter(u => !u.startsWith('data:'));
+            if (external.length) {
+                setProgress.log(`external resources: ${external.slice(0, 3).join(', ')}`);
+                const r = await optimizeCode(item);
+                r.note = 'JSON minified (textures/.bin are separate files — optimize those too)';
+                return r;
+            }
+            const { G, io } = await gltfIO();
+            let doc;
+            try { doc = await io.readJSON({ json, resources: {} }); }
+            catch (err) {
+                if (/draco/i.test(err.message)) skip('Draco-compressed glTF — already optimized');
+                skip('Could not read this glTF — kept original');
+            }
+            const r = await optimizeGltfDocument(doc, G, io, opts, setProgress);
+            if (r.out.length >= item.size) skip('glTF is already well optimized — kept original');
+            return { blob: new Blob([r.out], { type: 'model/gltf-binary' }), outName: replaceExtension(item.name, 'glb'),
+                     note: ['Converted to GLB (single binary file)', ...r.notes].join(' · ') };
+        }
+
+        async function optimizeGltfDocument(doc, G, io, opts, setProgress) {
             setProgress(25);
 
             const PRUNE = { keepLeaves: true, keepAttributes: true, keepExtras: true };   // keep anchors/hotspots & extra UV sets
@@ -514,10 +550,9 @@
 
             await doc.transform(G.prune(PRUNE), G.unpartition());
             const out = await io.writeBinary(doc);
-            if (out.length >= item.size) skip('GLB is already well optimized — kept original');
             const notes = [];
             if (texDone) notes.push(`${texDone} texture(s) recompressed`);
             if (opts.preset === 'aggressive') notes.push('meshes quantized');
-            return { blob: new Blob([out], { type: 'model/gltf-binary' }), outName: item.name, note: notes.join(' · ') };
+            return { out, notes };
         }
 

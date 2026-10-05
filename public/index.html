@@ -358,10 +358,18 @@
               how: 'Pages/illustrations recompressed, package repacked (EPUB structure kept valid).' },
             { cat: '3d', title: 'Blender', run: optimizeBlend, exts: ['blend'],
               how: 'Gzip-compressed — opens directly in Blender. Already-compressed files are skipped.' },
-            { cat: '3d', title: '3D models — glTF binary', run: optimizeGlb, exts: ['glb'],
-              how: 'Removes duplicate/unused data (named empties, extras and UV sets are kept), resizes & recompresses colour textures; normal/roughness/AO maps stay lossless. Aggressive also quantizes meshes. Works in three.js, Babylon, model-viewer, Blender.' },
-            { cat: '3d', title: '3D meshes', run: (item, opts) => item.extension === 'stl' ? optimizeStl(item) : optimizeObj(item, opts), exts: ['stl', 'obj'],
-              how: 'ASCII STL → binary STL (≈80% smaller). OBJ: comments removed, coordinates rounded to 6 / 5 / 4 decimals.' },
+            { cat: '3d', title: 'FBX', run: optimizeFbx, exts: ['fbx'],
+              how: 'Binary FBX: all geometry & animation arrays compressed with the format’s own zlib compression, embedded JPEG textures recompressed — opens in Blender, Maya, 3ds Max, Unity, Unreal, three.js. ASCII FBX: numbers shortened.' },
+            { cat: '3d', title: 'glTF / GLB', run: (item, opts, p) => item.extension === 'gltf' ? optimizeGltf(item, opts, p) : optimizeGlb(item, opts, p), exts: ['glb', 'gltf'],
+              how: 'Removes duplicate/unused data (named empties, extras and UV sets are kept), resizes & recompresses colour textures; normal/roughness/AO maps stay lossless. Aggressive also quantizes meshes. Self-contained .gltf becomes a .glb.' },
+            { cat: '3d', title: 'CAD — STEP', run: optimizeStep, exts: ['step', 'stp'],
+              how: 'Lossless: comments and whitespace removed, numbers written in their shortest exact form. Opens in SolidWorks, Fusion, FreeCAD, Rhino…' },
+            { cat: '3d', title: '3D meshes', run: (item, opts) => item.extension === 'stl' ? optimizeStl(item) : item.extension === 'ply' ? optimizePly(item) : optimizeObj(item, opts), exts: ['stl', 'obj', 'ply'],
+              how: 'ASCII STL / PLY → binary (≈70–80% smaller, lossless). OBJ: comments removed, coordinates rounded to 6 / 5 / 4 decimals.' },
+            { cat: '3d', title: '3D scene XML', run: optimizeCode, exts: ['dae', 'x3d'],
+              how: 'Collada & X3D: indentation and comments removed.' },
+            { cat: '3d', title: 'HDR environment maps', run: optimizeHdr, exts: ['hdr', 'pic'],
+              how: 'Radiance HDR: lossless RLE recompression, plus resolution caps with float-accurate filtering — Low: lossless only · Balanced: max 4K · Aggressive: max 2K (one step smaller with “Downscale”).' },
             { cat: '3d', title: '3D printing & maps', run: optimizeZipContainer, exts: ['3mf', 'kmz'],
               how: '3MF (Cura, PrusaSlicer, Bambu Studio) and Google Earth KMZ — repacked at maximum compression.' },
             { cat: 'font', title: 'Fonts', run: optimizeFont, exts: ['ttf', 'otf'],
@@ -369,7 +377,7 @@
             { cat: 'code', title: 'Web code', run: optimizeCode, exts: ['js', 'mjs', 'cjs', 'css', 'html', 'htm'],
               how: 'Minified. JavaScript via Terser; licence comments kept.' },
             { cat: 'code', title: 'Data & markup', run: optimizeCode,
-              exts: ['json', 'geojson', 'topojson', 'webmanifest', 'map', 'har', 'gltf', 'babylon', 'xml', 'kml', 'gpx', 'dae', 'xliff', 'xlf', 'rss', 'atom', 'plist', 'xsd'],
+              exts: ['json', 'geojson', 'topojson', 'webmanifest', 'map', 'har', 'babylon', 'xml', 'kml', 'gpx', 'xliff', 'xlf', 'rss', 'atom', 'plist', 'xsd'],
               how: 'Whitespace & comments removed. Numbers are never rewritten, so data stays exact.' },
             { cat: 'archive', title: 'Archives', run: (item, opts, p) => item.extension === 'tar' ? optimizeTar(item, opts) : optimizeZipContainer(item, opts, p), exts: ['zip', 'tar'],
               how: 'ZIP: photos inside recompressed, repacked at maximum compression. TAR → TAR.GZ.' }
@@ -388,7 +396,22 @@
             fig:  { cat: 'design', why: 'Figma files are proprietary — kept original' },
             afdesign: { cat: 'design', why: 'Affinity files are proprietary — kept original' },
             afphoto: { cat: 'design', why: 'Affinity files are proprietary — kept original' },
-            fbx:  { cat: '3d', why: 'FBX optimization is not supported yet' },
+            '3ds': { cat: '3d', why: '3DS is a legacy binary format — kept original (export FBX/GLB instead)' },
+            max:  { cat: '3d', why: '3ds Max scenes are proprietary — kept original' },
+            c4d:  { cat: '3d', why: 'Cinema 4D scenes are proprietary — kept original' },
+            ma:   { cat: '3d', why: 'Maya scenes are kept as-is' },
+            mb:   { cat: '3d', why: 'Maya binary scenes are proprietary — kept original' },
+            '3dm': { cat: '3d', why: 'Rhino files are proprietary — kept original' },
+            skp:  { cat: '3d', why: 'SketchUp files are proprietary — kept original' },
+            abc:  { cat: '3d', why: 'Alembic caches are kept as-is' },
+            usd:  { cat: '3d', why: 'USD is kept as-is' },
+            usdc: { cat: '3d', why: 'USD crate files are already compressed' },
+            usda: { cat: '3d', why: 'USD ASCII is kept as-is' },
+            iges: { cat: '3d', why: 'IGES uses a fixed column layout — kept original' },
+            igs:  { cat: '3d', why: 'IGES uses a fixed column layout — kept original' },
+            sldprt: { cat: '3d', why: 'SolidWorks files are proprietary — kept original (export STEP)' },
+            dwg:  { cat: '3d', why: 'DWG is proprietary — kept original' },
+            exr:  { cat: 'image', why: 'OpenEXR is not supported yet — kept original' },
             usdz: { cat: '3d', why: 'USDZ must stay uncompressed for AR Quick Look — kept original' },
             rar:  { cat: 'archive', why: '.rar archives are kept as-is' },
             '7z': { cat: 'archive', why: '.7z archives are kept as-is' },
@@ -544,7 +567,7 @@
         //  Sends metadata only (type, size, result, timings, engine trace) — never file contents.
         //  File names are included only in Test mode (?test in the URL).
         // =====================================================================
-        const APP_VERSION = '4.1';
+        const APP_VERSION = '4.2';
         const DIAG_ENDPOINT = 'diag/log.php';
         const TEST_MODE = /[?&]test\b/.test(location.search);
         const SESSION_ID = Math.random().toString(36).slice(2, 10);
@@ -1090,7 +1113,7 @@
         }
 
         const JSON_EXTS = ['json', 'geojson', 'topojson', 'webmanifest', 'map', 'har', 'gltf', 'babylon'];
-        const XML_EXTS = ['xml', 'kml', 'gpx', 'dae', 'xliff', 'xlf', 'rss', 'atom', 'plist', 'xsd'];
+        const XML_EXTS = ['xml', 'kml', 'gpx', 'dae', 'x3d', 'xliff', 'xlf', 'rss', 'atom', 'plist', 'xsd'];
 
         async function optimizeCode(item) {
             const ext = item.extension;
@@ -1582,21 +1605,57 @@
         }
 
         // ---------- 3D: GLB (glTF binary) ----------
-        async function optimizeGlb(item, opts, setProgress) {
-            const head = bytesToLatin1(await readHead(item.file, 4));
-            if (head !== 'glTF') skip('Not a GLB file — kept original');
+        async function gltfIO() {
             const G = await loadLib('gltf');
             await Promise.all([G.MeshoptDecoder.ready, G.MeshoptEncoder.ready]);
             const io = new G.WebIO()
                 .registerExtensions(G.ALL_EXTENSIONS)
                 .registerDependencies({ 'meshopt.decoder': G.MeshoptDecoder, 'meshopt.encoder': G.MeshoptEncoder });
+            return { G, io };
+        }
 
+        async function optimizeGlb(item, opts, setProgress) {
+            const head = bytesToLatin1(await readHead(item.file, 4));
+            if (head !== 'glTF') skip('Not a GLB file — kept original');
+            const { G, io } = await gltfIO();
             let doc;
             try { doc = await io.readBinary(new Uint8Array(await item.file.arrayBuffer())); }
             catch (err) {
                 if (/draco/i.test(err.message)) skip('Draco-compressed GLB — already optimized');
                 skip('Could not read this GLB — kept original');
             }
+            const r = await optimizeGltfDocument(doc, G, io, opts, setProgress);
+            if (r.out.length >= item.size) skip('GLB is already well optimized — kept original');
+            return { blob: new Blob([r.out], { type: 'model/gltf-binary' }), outName: item.name, note: r.notes.join(' · ') };
+        }
+
+        // .gltf: self-contained (embedded data: URIs) → optimized GLB. With external .bin/textures → JSON minify only.
+        async function optimizeGltf(item, opts, setProgress) {
+            const { text } = await readUtf8(item.file);
+            let json;
+            try { json = JSON.parse(text); } catch (_) { skip('Invalid glTF JSON — kept original'); }
+            const uris = [...(json.buffers || []), ...(json.images || [])].map(x => x.uri).filter(Boolean);
+            const external = uris.filter(u => !u.startsWith('data:'));
+            if (external.length) {
+                setProgress.log(`external resources: ${external.slice(0, 3).join(', ')}`);
+                const r = await optimizeCode(item);
+                r.note = 'JSON minified (textures/.bin are separate files — optimize those too)';
+                return r;
+            }
+            const { G, io } = await gltfIO();
+            let doc;
+            try { doc = await io.readJSON({ json, resources: {} }); }
+            catch (err) {
+                if (/draco/i.test(err.message)) skip('Draco-compressed glTF — already optimized');
+                skip('Could not read this glTF — kept original');
+            }
+            const r = await optimizeGltfDocument(doc, G, io, opts, setProgress);
+            if (r.out.length >= item.size) skip('glTF is already well optimized — kept original');
+            return { blob: new Blob([r.out], { type: 'model/gltf-binary' }), outName: replaceExtension(item.name, 'glb'),
+                     note: ['Converted to GLB (single binary file)', ...r.notes].join(' · ') };
+        }
+
+        async function optimizeGltfDocument(doc, G, io, opts, setProgress) {
             setProgress(25);
 
             const PRUNE = { keepLeaves: true, keepAttributes: true, keepExtras: true };   // keep anchors/hotspots & extra UV sets
@@ -1646,11 +1705,456 @@
 
             await doc.transform(G.prune(PRUNE), G.unpartition());
             const out = await io.writeBinary(doc);
-            if (out.length >= item.size) skip('GLB is already well optimized — kept original');
             const notes = [];
             if (texDone) notes.push(`${texDone} texture(s) recompressed`);
             if (opts.preset === 'aggressive') notes.push('meshes quantized');
-            return { blob: new Blob([out], { type: 'model/gltf-binary' }), outName: item.name, note: notes.join(' · ') };
+            return { out, notes };
+        }
+
+        // ---------- FBX ----------
+        // Binary FBX: every geometry/animation array is re-compressed with zlib level 9 (the FBX spec's own
+        // array compression, read by Autodesk SDK, Blender, Unity, Unreal, three.js), embedded JPEG textures
+        // are recompressed. Node tree, names and values stay identical.
+        // ASCII FBX: trailing zeros in numbers are trimmed (1.000000 → 1) — values unchanged.
+        const FBX_ARRAY_ELEM = { f: 4, d: 8, l: 8, i: 4, b: 1 };
+
+        function fbxParse(bytes) {
+            const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+            const version = dv.getUint32(23, true);
+            const wide = version >= 7500;
+            const rd = o => wide ? Number(dv.getBigUint64(o, true)) : dv.getUint32(o, true);
+            const recHead = wide ? 25 : 13;
+
+            function readProps(start, end) {
+                const props = [];
+                let p = start;
+                while (p < end) {
+                    const t = String.fromCharCode(bytes[p]);
+                    const s = p; p++;
+                    if (FBX_ARRAY_ELEM[t]) {
+                        const len = dv.getUint32(p, true), enc = dv.getUint32(p + 4, true), clen = dv.getUint32(p + 8, true);
+                        p += 12;
+                        props.push({ t, len, enc, data: bytes.subarray(p, p + clen) });
+                        p += clen;
+                    } else if (t === 'S' || t === 'R') {
+                        const len = dv.getUint32(p, true);
+                        p += 4;
+                        props.push({ t, data: bytes.subarray(p, p + len) });
+                        p += len;
+                    } else {
+                        const size = { Y: 2, C: 1, I: 4, F: 4, D: 8, L: 8 }[t];
+                        if (!size) throw new Error('Unknown FBX property type ' + t);
+                        p += size;
+                        props.push({ t, raw: bytes.subarray(s, p) });
+                    }
+                }
+                if (p !== end) throw new Error('FBX property list size mismatch');
+                return props;
+            }
+
+            function readNode(o) {
+                const end = rd(o), nProps = rd(o + (wide ? 8 : 4)), propLen = rd(o + (wide ? 16 : 8));
+                const nameLen = bytes[o + recHead - 1];
+                if (end === 0) return { node: null, next: o + recHead };
+                const name = bytesToLatin1(bytes.subarray(o + recHead, o + recHead + nameLen));
+                const pStart = o + recHead + nameLen, pEnd = pStart + propLen;
+                const props = readProps(pStart, pEnd);
+                if (props.length !== nProps) throw new Error('FBX property count mismatch');
+                const node = { name, props, children: [], nested: end > pEnd };
+                let c = pEnd;
+                if (node.nested) {
+                    while (c < end) {
+                        const r = readNode(c);
+                        c = r.next;
+                        if (!r.node) break;
+                        node.children.push(r.node);
+                    }
+                    if (c !== end) throw new Error('FBX node size mismatch in ' + name);
+                }
+                return { node, next: end };
+            }
+
+            const nodes = [];
+            let o = 27;
+            while (o < bytes.length) {
+                const r = readNode(o);
+                o = r.next;
+                if (!r.node) break;
+                nodes.push(r.node);
+            }
+            return { version, wide, nodes, footer: bytes.subarray(o) };
+        }
+
+        async function fbxOptimizeProps(nodes, opts, pako, stats, parentName = '') {
+            for (const n of nodes) {
+                for (let i = 0; i < n.props.length; i++) {
+                    const p = n.props[i];
+                    if (FBX_ARRAY_ELEM[p.t]) {
+                        const rawLen = p.len * FBX_ARRAY_ELEM[p.t];
+                        if (rawLen < 128) continue;
+                        const raw = p.enc === 1 ? pako.inflate(p.data) : p.data;
+                        if (raw.length !== rawLen) throw new Error('FBX array length mismatch');
+                        const comp = pako.deflate(raw, { level: 9 });
+                        if (comp.length < p.data.length) { stats.saved += p.data.length - comp.length; p.data = comp; p.enc = 1; stats.arrays++; }
+                    } else if (p.t === 'R' && n.name === 'Content' && parentName === 'Video' && p.data.length > 20 * 1024 && p.data[0] === 0xFF && p.data[1] === 0xD8) {
+                        const re = await reencodeJpegBytes(p.data, opts.jpegQ);
+                        if (re && re.length < p.data.length * 0.9) { p.data = re; stats.textures++; }
+                    }
+                }
+                await fbxOptimizeProps(n.children, opts, pako, stats, n.name);
+            }
+        }
+
+        function fbxWrite(model) {
+            const { wide, version, nodes } = model;
+            const chunks = [];
+            let offset = 0;
+            const push = b => { chunks.push(b); offset += b.length; };
+            const recHead = wide ? 25 : 13;
+            const u32 = v => { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, v, true); return b; };
+
+            function propBytes(p) {
+                if (p.raw) return [p.raw];
+                if (FBX_ARRAY_ELEM[p.t]) {
+                    const h = new Uint8Array(13), dv = new DataView(h.buffer);
+                    h[0] = p.t.charCodeAt(0); dv.setUint32(1, p.len, true); dv.setUint32(5, p.enc, true); dv.setUint32(9, p.data.length, true);
+                    return [h, p.data];
+                }
+                const h = new Uint8Array(5); h[0] = p.t.charCodeAt(0); new DataView(h.buffer).setUint32(1, p.data.length, true);
+                return [h, p.data];
+            }
+            function writeNode(n) {
+                const name = new TextEncoder().encode(n.name);
+                const pb = n.props.flatMap(propBytes);
+                const propLen = pb.reduce((a, b) => a + b.length, 0);
+                const head = new Uint8Array(recHead + name.length);
+                const start = offset;
+                push(head);
+                pb.forEach(push);
+                if (n.nested) { n.children.forEach(writeNode); push(new Uint8Array(recHead)); }
+                const dv = new DataView(head.buffer);
+                if (wide) {
+                    dv.setBigUint64(0, BigInt(offset), true); dv.setBigUint64(8, BigInt(n.props.length), true); dv.setBigUint64(16, BigInt(propLen), true);
+                } else {
+                    dv.setUint32(0, offset, true); dv.setUint32(4, n.props.length, true); dv.setUint32(8, propLen, true);
+                }
+                head[recHead - 1] = name.length;
+                head.set(name, recHead);
+                if (!wide && offset > 0xFFFFFFFF) throw new Error('FBX too large');
+                return start;
+            }
+
+            const magic = new Uint8Array(27);
+            magic.set(new TextEncoder().encode('Kaydara FBX Binary  '), 0);
+            magic[20] = 0; magic[21] = 0x1A; magic[22] = 0;
+            new DataView(magic.buffer).setUint32(23, version, true);
+            push(magic);
+            nodes.forEach(writeNode);
+            push(new Uint8Array(recHead));                       // top-level null record
+
+            // Footer: id, 4 zeros, padding to 16-byte alignment, version, 120 zeros, magic
+            const f = model.footer;
+            if (f.length >= 16 + 16) {
+                push(f.subarray(0, 16));
+                push(new Uint8Array(4));
+                let pad = ((offset + 15) & ~15) - offset;
+                if (pad === 0) pad = 16;
+                push(new Uint8Array(pad));
+                push(u32(version));
+                push(new Uint8Array(120));
+                push(f.subarray(f.length - 16));
+            } else push(f);
+            return chunks;
+        }
+
+        async function optimizeFbx(item, opts, setProgress) {
+            const head = bytesToLatin1(await readHead(item.file, 23));
+            if (head.startsWith('Kaydara FBX Binary')) {
+                const bytes = new Uint8Array(await item.file.arrayBuffer());
+                const pako = await loadLib('pako');
+                setProgress(15);
+                let model;
+                try { model = fbxParse(bytes); }
+                catch (err) { setProgress.log('parse: ' + err.message); skip('Could not parse this FBX — kept original'); }
+                setProgress.log(`fbx binary v${model.version}, ${model.nodes.length} top-level nodes`);
+                const stats = { arrays: 0, textures: 0, saved: 0 };
+                await fbxOptimizeProps(model.nodes, opts, pako, stats);
+                setProgress(80);
+                const blob = new Blob(fbxWrite(model), { type: 'application/octet-stream' });
+                // round-trip safety check: re-parse what we wrote
+                try { fbxParse(new Uint8Array(await blob.arrayBuffer())); }
+                catch (err) { throw new Error('FBX self-check failed: ' + err.message); }
+                if (blob.size >= item.size) skip('FBX arrays are already compressed — kept original');
+                const notes = [];
+                if (stats.arrays) notes.push(`${stats.arrays} geometry/animation arrays compressed`);
+                if (stats.textures) notes.push(`${stats.textures} embedded texture(s) recompressed`);
+                return { blob, outName: item.name, note: notes.join(' · ') };
+            }
+            // ASCII FBX
+            const { text } = await readUtf8(item.file);
+            if (!/^\s*;\s*FBX/i.test(text) && !/FBXHeaderExtension/.test(text.slice(0, 5000))) skip('Unrecognized FBX file — kept original');
+            setProgress.log('fbx ascii');
+            const out = withStash(text, [/"(?:[^"\\]|\\.)*"/g, /;[^\n]*/g], s => s
+                .replace(/(\d)\.(\d*?)0+(?![\d])/g, (m, a, frac) => frac ? `${a}.${frac}` : a)   // 1.500000 → 1.5, 2.000 → 2
+                .replace(/[ \t]+$/gm, ''));
+            const blob = new Blob([out], { type: 'text/plain' });
+            if (blob.size >= item.size) skip('Already compact — kept original');
+            return { blob, outName: item.name, note: 'ASCII FBX: numbers shortened (values unchanged). Export as binary FBX for much smaller files.' };
+        }
+
+        // ---------- STEP (ISO 10303-21) ----------
+        // Exact, lossless rewrite: comments and whitespace removed, REAL numbers written in their shortest
+        // exact form (1.500000000000000E+001 → 15.). Strings untouched. Opens in every CAD tool.
+        function shortestStepReal(m) {
+            const r = m.match(/^(-?)(\d+)\.(\d*)(?:E([+-]?\d+))?$/i);
+            if (!r) return m;
+            const sign = r[1];
+            let all = r[2] + r[3];
+            let pointPos = r[2].length + (r[4] ? parseInt(r[4], 10) : 0);   // decimal point position inside `all`
+            while (all.length > 1 && all[0] === '0') { all = all.slice(1); pointPos--; }
+            while (all.length > 1 && all[all.length - 1] === '0') { all = all.slice(0, -1); }
+            if (all === '0') return '0.';
+            let plain = null;
+            if (pointPos <= 0 && pointPos > -6) plain = '0.' + '0'.repeat(-pointPos) + all;
+            else if (pointPos > 0 && pointPos < all.length) plain = all.slice(0, pointPos) + '.' + all.slice(pointPos);
+            else if (pointPos >= all.length && pointPos - all.length < 6) plain = all + '0'.repeat(pointPos - all.length) + '.';
+            const sci = all[0] + '.' + all.slice(1) + 'E' + (pointPos - 1);
+            return sign + (plain && plain.length <= sci.length ? plain : sci);
+        }
+
+        async function optimizeStep(item) {
+            const { text } = await readUtf8(item.file);
+            if (!/^\s*ISO-10303-21\s*;/.test(text)) skip('Not a STEP (ISO 10303-21) file — kept original');
+            const out = withStash(text, [/'(?:[^']|'')*'/g], s => s
+                .replace(/\/\*[\s\S]*?\*\//g, '')
+                .replace(/[ \t\r\n]+/g, '')
+                .replace(/;/g, ';\n')
+                .replace(/(^|[(,=])(-?\d+\.\d*(?:E[+-]?\d+)?)(?=[),;])/gi, (m, pre, num) => pre + shortestStepReal(num)));
+            const blob = new Blob([out], { type: 'model/step' });
+            if (blob.size >= item.size) skip('Already compact — kept original');
+            return { blob, outName: item.name, note: 'Lossless: numbers & whitespace compacted' };
+        }
+
+        // ---------- PLY (ASCII → binary little-endian) ----------
+        const PLY_TYPES = {
+            char: ['Int8', 1], int8: ['Int8', 1], uchar: ['Uint8', 1], uint8: ['Uint8', 1],
+            short: ['Int16', 2], int16: ['Int16', 2], ushort: ['Uint16', 2], uint16: ['Uint16', 2],
+            int: ['Int32', 4], int32: ['Int32', 4], uint: ['Uint32', 4], uint32: ['Uint32', 4],
+            float: ['Float32', 4], float32: ['Float32', 4], double: ['Float64', 8], float64: ['Float64', 8]
+        };
+
+        async function optimizePly(item) {
+            const head = bytesToLatin1(await readHead(item.file, 512));
+            if (!head.startsWith('ply')) skip('Not a PLY file — kept original');
+            if (!/format ascii/.test(head)) skip('Binary PLY is already compact');
+            const { text } = await readUtf8(item.file);
+            const hEnd = text.indexOf('end_header');
+            if (hEnd < 0) skip('Damaged PLY header — kept original');
+            const headerLines = text.slice(0, hEnd).split(/\r?\n/);
+            const elements = [];
+            for (const line of headerLines) {
+                const t = line.trim().split(/\s+/);
+                if (t[0] === 'element') elements.push({ name: t[1], count: +t[2], props: [] });
+                else if (t[0] === 'property') {
+                    const el = elements[elements.length - 1];
+                    if (!el) skip('Damaged PLY header — kept original');
+                    if (t[1] === 'list') {
+                        if (!PLY_TYPES[t[2]] || !PLY_TYPES[t[3]]) skip('Unsupported PLY type — kept original');
+                        el.props.push({ list: true, ct: PLY_TYPES[t[2]], it: PLY_TYPES[t[3]] });
+                    } else {
+                        if (!PLY_TYPES[t[1]]) skip('Unsupported PLY type — kept original');
+                        el.props.push({ list: false, it: PLY_TYPES[t[1]] });
+                    }
+                }
+            }
+            const body = text.slice(text.indexOf('\n', hEnd) + 1);
+            const tok = body.split(/\s+/).filter(Boolean);
+            let ti = 0;
+            // size pass
+            let size = 0;
+            for (const el of elements) for (let r = 0; r < el.count; r++) for (const p of el.props) {
+                if (p.list) { const n = +tok[ti++]; size += p.ct[1] + n * p.it[1]; ti += n; }
+                else { size += p.it[1]; ti++; }
+            }
+            if (ti > tok.length) skip('PLY data shorter than its header says — kept original');
+            const buf = new ArrayBuffer(size), dv = new DataView(buf);
+            let o = 0; ti = 0;
+            const put = (type, v) => { dv['set' + type[0]](o, type[0].startsWith('Float') ? parseFloat(v) : parseInt(v, 10), true); o += type[1]; };
+            for (const el of elements) for (let r = 0; r < el.count; r++) for (const p of el.props) {
+                if (p.list) { const n = +tok[ti]; put(p.ct, tok[ti++]); for (let k = 0; k < n; k++) put(p.it, tok[ti++]); }
+                else put(p.it, tok[ti++]);
+            }
+            const newHeader = text.slice(0, hEnd).replace(/format ascii 1\.0/, 'format binary_little_endian 1.0') + 'end_header\n';
+            const blob = new Blob([newHeader, buf], { type: 'application/octet-stream' });
+            if (blob.size >= item.size) skip('Binary version would not be smaller — kept original');
+            return { blob, outName: item.name, note: 'ASCII → binary PLY (lossless)' };
+        }
+
+        // ---------- HDR (Radiance RGBE .hdr / .pic) ----------
+        // Lossless: rewrite every scanline with modern RLE (many tools save flat/uncompressed HDRs).
+        // With "Downscale high-res media": shrink environment maps to 4K (2K on Aggressive) with
+        // float-accurate box filtering — the usual way to slim HDRIs for web/real-time 3D.
+        function hdrDecodeScanline(bytes, pos, width, out) {
+            // returns new position; fills out (Uint8Array width*4, RGBE interleaved)
+            if (width >= 8 && width < 32768 && bytes[pos] === 2 && bytes[pos + 1] === 2 && (bytes[pos + 2] & 0x80) === 0) {
+                const w = (bytes[pos + 2] << 8) | bytes[pos + 3];
+                if (w !== width) throw new Error('HDR scanline width mismatch');
+                pos += 4;
+                for (let c = 0; c < 4; c++) {
+                    let x = 0;
+                    while (x < width) {
+                        let count = bytes[pos++];
+                        if (count === undefined) throw new Error('HDR data truncated');
+                        if (count > 128) {
+                            count -= 128;
+                            if (count === 0 || x + count > width) throw new Error('Bad HDR run');
+                            const v = bytes[pos++];
+                            for (let i = 0; i < count; i++) out[(x++) * 4 + c] = v;
+                        } else {
+                            if (count === 0 || x + count > width) throw new Error('Bad HDR literal');
+                            for (let i = 0; i < count; i++) out[(x++) * 4 + c] = bytes[pos++];
+                        }
+                    }
+                }
+                return pos;
+            }
+            // flat pixels, possibly with old-style RLE (1,1,1,n = repeat previous pixel)
+            let x = 0, shift = 0;
+            while (x < width) {
+                if (pos + 4 > bytes.length) throw new Error('HDR data truncated');
+                const r = bytes[pos], g = bytes[pos + 1], b = bytes[pos + 2], e = bytes[pos + 3];
+                pos += 4;
+                if (r === 1 && g === 1 && b === 1 && x > 0) {
+                    const n = e << shift;
+                    for (let i = 0; i < n && x < width; i++, x++) out.copyWithin(x * 4, (x - 1) * 4, x * 4);
+                    shift += 8;
+                } else {
+                    out[x * 4] = r; out[x * 4 + 1] = g; out[x * 4 + 2] = b; out[x * 4 + 3] = e;
+                    x++; shift = 0;
+                }
+            }
+            return pos;
+        }
+
+        // Standard new-style RLE encoder (Greg Ward / Bruce Walter rgbe.c)
+        function hdrEncodeScanline(px, width, chunks) {
+            if (width < 8 || width >= 32768) { chunks.push(px.slice(0, width * 4)); return; }
+            const out = [2, 2, width >> 8, width & 255];
+            const chan = new Uint8Array(width);
+            for (let c = 0; c < 4; c++) {
+                for (let x = 0; x < width; x++) chan[x] = px[x * 4 + c];
+                let cur = 0;
+                while (cur < width) {
+                    let begRun = cur, runCount = 0, oldRunCount = 0;
+                    while (runCount < 4 && begRun < width) {
+                        begRun += runCount;
+                        oldRunCount = runCount;
+                        runCount = 1;
+                        while (begRun + runCount < width && runCount < 127 && chan[begRun] === chan[begRun + runCount]) runCount++;
+                    }
+                    if (oldRunCount > 1 && oldRunCount === begRun - cur) {
+                        out.push(128 + oldRunCount, chan[cur]);
+                        cur = begRun;
+                    }
+                    while (cur < begRun) {
+                        let n = Math.min(begRun - cur, 128);
+                        out.push(n);
+                        for (let i = 0; i < n; i++) out.push(chan[cur + i]);
+                        cur += n;
+                    }
+                    if (runCount >= 4) {
+                        out.push(128 + runCount, chan[begRun]);
+                        cur += runCount;
+                    }
+                }
+            }
+            chunks.push(new Uint8Array(out));
+        }
+
+        function rgbeToFloat(px, i, acc, j, weight) {
+            const e = px[i + 3];
+            if (!e) return;
+            const f = Math.pow(2, e - 136) * weight;   // (mantissa + 0.5) / 256 * 2^(e-128)
+            acc[j] += (px[i] + 0.5) * f; acc[j + 1] += (px[i + 1] + 0.5) * f; acc[j + 2] += (px[i + 2] + 0.5) * f;
+        }
+
+        function floatToRgbe(r, g, b, out, i) {
+            const v = Math.max(r, g, b);
+            if (v < 1e-32) { out[i] = out[i + 1] = out[i + 2] = out[i + 3] = 0; return; }
+            const e = Math.ceil(Math.log2(v) + 1e-9);
+            const s = 256 / Math.pow(2, e);
+            out[i] = Math.min(255, Math.floor(r * s)); out[i + 1] = Math.min(255, Math.floor(g * s)); out[i + 2] = Math.min(255, Math.floor(b * s));
+            out[i + 3] = e + 128;
+        }
+
+        async function optimizeHdr(item, opts, setProgress) {
+            const bytes = new Uint8Array(await item.file.arrayBuffer());
+            const headText = bytesToLatin1(bytes.subarray(0, Math.min(bytes.length, 65536)));
+            if (!/^#\?(RADIANCE|RGBE)/.test(headText)) skip('Not a Radiance HDR image (e.g. an ENVI/Analyze header) — kept original');
+            const hdrEnd = headText.indexOf('\n\n');
+            if (hdrEnd < 0) skip('Damaged HDR header — kept original');
+            const header = headText.slice(0, hdrEnd);
+            if (/FORMAT=32-bit_rle_xyze/.test(header)) skip('XYZ-encoded HDR is kept as-is');
+            const resEnd = headText.indexOf('\n', hdrEnd + 2);
+            const resLine = headText.slice(hdrEnd + 2, resEnd);
+            const m = resLine.match(/^([-+])Y (\d+) ([-+])X (\d+)$/);
+            if (!m) skip('Unusual HDR orientation — kept original');
+            const height = +m[2], width = +m[4];
+            let pos = resEnd + 1;
+
+            // Target size
+            // HDRIs are almost always RLE already, so size comes from resolution. Width caps:
+            //   Low: lossless only · Balanced: 4K · Aggressive: 2K   (one step smaller with "Downscale" on)
+            const cap = (opts.downscale ? { low: 4096, balanced: 2048, aggressive: 1024 } : { low: 0, balanced: 4096, aggressive: 2048 })[opts.preset];
+            const scale = cap && width > cap ? cap / width : 1;
+            const ow = Math.max(1, Math.round(width * scale)), oh = Math.max(1, Math.round(height * scale));
+            const resized = ow !== width;
+            setProgress.log(`hdr ${width}x${height}${resized ? ` → ${ow}x${oh}` : ''}, first scanline ${bytes[pos] === 2 && bytes[pos + 1] === 2 ? 'RLE' : 'flat'}`);
+
+            const header2 = header.replace(/^(SOFTWARE|# ?Made with|# ?Created).*\n?/gmi, '') + '\nSOFTWARE=OmniOpti';
+            const chunks = [new TextEncoder().encode(`${header2}\n\n${m[1]}Y ${oh} ${m[3]}X ${ow}\n`)];
+
+            const row = new Uint8Array(width * 4);
+            try {
+                if (!resized) {
+                    for (let y = 0; y < height; y++) {
+                        pos = hdrDecodeScanline(bytes, pos, width, row);
+                        hdrEncodeScanline(row, width, chunks);
+                        if ((y & 63) === 0) { setProgress(5 + (y / height) * 90); await nextFrame(); }
+                    }
+                } else {
+                    // streaming box filter: each input pixel adds to exactly one output pixel bucket
+                    const acc = new Float64Array(ow * 3), cnt = new Float64Array(ow);
+                    const colMap = new Int32Array(width);
+                    for (let x = 0; x < width; x++) colMap[x] = Math.min(ow - 1, Math.floor(x * ow / width));
+                    const outRow = new Uint8Array(ow * 4);
+                    let curOut = 0;
+                    const flush = () => {
+                        for (let x = 0; x < ow; x++) {
+                            const n = cnt[x] || 1;
+                            floatToRgbe(acc[x * 3] / n, acc[x * 3 + 1] / n, acc[x * 3 + 2] / n, outRow, x * 4);
+                        }
+                        hdrEncodeScanline(outRow, ow, chunks);
+                        acc.fill(0); cnt.fill(0);
+                    };
+                    for (let y = 0; y < height; y++) {
+                        pos = hdrDecodeScanline(bytes, pos, width, row);
+                        const ty = Math.min(oh - 1, Math.floor(y * oh / height));
+                        while (ty > curOut) { flush(); curOut++; }
+                        for (let x = 0; x < width; x++) { const o = colMap[x]; rgbeToFloat(row, x * 4, acc, o * 3, 1); cnt[o]++; }
+                        if ((y & 63) === 0) { setProgress(5 + (y / height) * 90); await nextFrame(); }
+                    }
+                    while (curOut < oh) { flush(); curOut++; }
+                }
+            } catch (err) {
+                skip(`Could not read this HDR (${err.message}) — kept original`);
+            }
+
+            const blob = new Blob(chunks, { type: 'image/vnd.radiance' });
+            if (blob.size >= item.size * 0.99 && !resized) {
+                skip(`Already RLE-compressed and ≤ ${cap || width}px wide — kept original` + (opts.preset === 'aggressive' && opts.downscale ? '' : '. Use Aggressive or “Downscale” to shrink it further'));
+            }
+            return { blob, outName: item.name, note: resized ? `Resized to ${ow}×${oh}` : 'Recompressed (lossless RLE)' };
         }
 
         // ---------- Video & audio ----------
@@ -2029,6 +2533,10 @@
             const t0 = performance.now();
             try {
                 const result = await runOptimizer(item, opts, setProgress);
+                // Same format, same name and under 0.5% smaller isn't worth replacing the original
+                if (result.outName === item.name && result.blob.size > item.size * 0.995 && !/Resized/.test(result.note || '')) {
+                    throw new SkipError('Already optimized (less than 0.5% smaller) — kept original');
+                }
                 item.compressedBlob = result.blob;
                 item.optimizedSize = result.blob.size;
                 item.outName = result.outName || item.name;
