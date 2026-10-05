@@ -30,14 +30,14 @@ logs/           diagnostics log pulled from the site daily (committed automatica
 
 Secrets (only you see these):
 
-- `FTP_SERVER` — e.g. `ftp.groundfloorstudio.rs` (cPanel → FTP Accounts → "Configure FTP Client")
-- `FTP_USERNAME` — tip: create a dedicated FTP account limited to the subdomain folder
+- `FTP_SERVER` — e.g. `ftp.filefit.me` (cPanel → FTP Accounts → "Configure FTP Client")
+- `FTP_USERNAME` — tip: create a dedicated FTP account limited to `public_html`
 - `FTP_PASSWORD`
 
 Variables:
 
-- `FTP_SERVER_DIR` — folder of the subdomain **relative to the FTP account's home**, ending with `/`
-  (e.g. `filefit.me/`, or `./` if the FTP account is already limited to that folder)
+- `FTP_SERVER_DIR` — site folder **relative to the FTP account's home**, ending with `/`
+  (`public_html/` for the main cPanel account, or `./` if the FTP account is limited to public_html)
 - optional `FTP_PROTOCOL` (`ftps` default, or `ftp`), `FTP_PORT` (21), `SITE_URL`
 
 ## Diagnostics
