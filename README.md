@@ -1,6 +1,6 @@
 # OmniOpti — browser file optimizer
 
-Live: https://optimize.groundfloorstudio.rs/
+Live: https://filefit.me/
 
 Everything runs in the visitor's browser — files are never uploaded. 120 file types (images, video, audio, PDF, Office, design-app packages, 3D, fonts, code).
 
@@ -37,7 +37,7 @@ Secrets (only you see these):
 Variables:
 
 - `FTP_SERVER_DIR` — folder of the subdomain **relative to the FTP account's home**, ending with `/`
-  (e.g. `optimize.groundfloorstudio.rs/`, or `./` if the FTP account is already limited to that folder)
+  (e.g. `filefit.me/`, or `./` if the FTP account is already limited to that folder)
 - optional `FTP_PROTOCOL` (`ftps` default, or `ftp`), `FTP_PORT` (21), `SITE_URL`
 
 ## Diagnostics

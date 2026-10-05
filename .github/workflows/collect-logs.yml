@@ -16,7 +16,7 @@ jobs:
 
       - name: Download summary + raw log from the site
         env:
-          SITE: ${{ vars.SITE_URL || 'https://optimize.groundfloorstudio.rs/' }}
+          SITE: ${{ vars.SITE_URL || 'https://filefit.me/' }}
         run: |
           mkdir -p logs
           curl -fsS "${SITE%/}/diag/log.php?view=json&days=30" -o logs/summary-latest.json

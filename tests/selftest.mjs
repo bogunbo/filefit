@@ -1,10 +1,10 @@
 // Runs the built-in self-test (?test&selftest) against a URL in real Google Chrome
 // and writes reports/selftest-latest.json + reports/selftest-latest.md
-// Usage: node tests/selftest.mjs https://optimize.groundfloorstudio.rs/ [only=pdf,mp4]
+// Usage: node tests/selftest.mjs https://filefit.me/ [only=pdf,mp4]
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 
-const base = (process.argv[2] || 'https://optimize.groundfloorstudio.rs/').replace(/\/?$/, '/');
+const base = (process.argv[2] || 'https://filefit.me/').replace(/\/?$/, '/');
 const only = (process.argv.find(a => a.startsWith('only=')) || '').slice(5);
 const url = `${base}index.html?test&selftest${only ? '&only=' + only : ''}&v=${Date.now()}`;
 
