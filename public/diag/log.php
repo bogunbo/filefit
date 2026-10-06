@@ -1,6 +1,6 @@
 <?php
 /**
- * OmniOpti diagnostics endpoint
+ * FileFit diagnostics endpoint
  *  POST  JSON array of events  → appended to data/log-YYYY-MM.jsonl
  *  GET   ?view=summary (default) | raw | json   [&days=30] [&test=1] [&ext=pdf] [&n=500]
  * Events contain metadata only (type, size, result, timings, browser). File names only in test mode.
@@ -128,7 +128,7 @@ $skp = array_sum(array_column($byExt, 'skipped'));
 $q = function($extra) use ($days, $onlyTest) { return '?' . http_build_query(array_merge(['days'=>$days] + ($onlyTest ? ['test'=>1] : []), $extra)); };
 ?><!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>OmniOpti diagnostics</title>
+<title>FileFit diagnostics</title>
 <style>
 :root{--bg:#0b0f17;--card:#131926;--b:#1f293d;--t:#e2e8f0;--m:#94a3b8;--ok:#34d399;--warn:#fcd34d;--bad:#fb7185;--acc:#818cf8}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:14px/1.45 Inter,system-ui,sans-serif;padding:24px 16px}
@@ -142,7 +142,7 @@ th,td{padding:7px 10px;border-bottom:1px solid var(--b);text-align:left;vertical
 .trace{color:#64748b;font-size:11px;font-family:ui-monospace,monospace}.filters a{margin-right:10px}
 .scroll{overflow-x:auto}
 </style></head><body><div class="wrap">
-<h1>OmniOpti diagnostics</h1>
+<h1>FileFit diagnostics</h1>
 <p class="muted">Last <?=h($days)?> days<?= $onlyTest ? ' · test mode only' : '' ?><?= $extFilter ? ' · .'.h($extFilter) : '' ?> · <?=count($sessions)?> sessions</p>
 <p class="filters muted">Range: <a href="<?=h($q(['days'=>1]))?>">24h</a><a href="<?=h($q(['days'=>7]))?>">7 days</a><a href="<?=h($q(['days'=>30]))?>">30 days</a>
  · <a href="?days=<?=h($days)?>&test=1">test mode only</a><a href="?days=<?=h($days)?>">everything</a>

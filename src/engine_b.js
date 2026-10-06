@@ -410,7 +410,7 @@
 
             const buf = new ArrayBuffer(84 + tris.length * 50);
             const dv = new DataView(buf);
-            const header = 'Binary STL converted by OmniOpti';
+            const header = 'Binary STL converted by FileFit';
             for (let i = 0; i < header.length; i++) dv.setUint8(i, header.charCodeAt(i));
             dv.setUint32(80, tris.length, true);
             tris.forEach((t, i) => {

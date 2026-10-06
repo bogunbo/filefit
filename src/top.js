@@ -1,6 +1,6 @@
     <script>
         // =====================================================================
-        //  OmniOpti — real, 100% client-side optimization engine
+        //  FileFit — real, 100% client-side optimization engine
         // =====================================================================
 
         // ---------- State ----------

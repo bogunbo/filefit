@@ -221,7 +221,7 @@
             });
 
             const content = await zip.generateAsync({ type: 'blob' });
-            triggerDownload(content, `OmniOpti_${new Date().toISOString().slice(0, 10)}.zip`);
+            triggerDownload(content, `FileFit_${new Date().toISOString().slice(0, 10)}.zip`);
         }
 
         function resetFile(id) {

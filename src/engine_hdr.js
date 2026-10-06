@@ -119,7 +119,7 @@
             const resized = ow !== width;
             setProgress.log(`hdr ${width}x${height}${resized ? ` → ${ow}x${oh}` : ''}, first scanline ${bytes[pos] === 2 && bytes[pos + 1] === 2 ? 'RLE' : 'flat'}`);
 
-            const header2 = header.replace(/^(SOFTWARE|# ?Made with|# ?Created).*\n?/gmi, '') + '\nSOFTWARE=OmniOpti';
+            const header2 = header.replace(/^(SOFTWARE|# ?Made with|# ?Created).*\n?/gmi, '') + '\nSOFTWARE=FileFit';
             const chunks = [new TextEncoder().encode(`${header2}\n\n${m[1]}Y ${oh} ${m[3]}X ${ow}\n`)];
 
             const row = new Uint8Array(width * 4);

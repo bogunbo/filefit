@@ -109,6 +109,6 @@
 
         function exportDiagLog() {
             const blob = new Blob([localLog.map(e => JSON.stringify(e)).join('\n') + '\n'], { type: 'application/x-ndjson' });
-            triggerDownload(blob, `omniopti-log-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.jsonl`);
+            triggerDownload(blob, `filefit-log-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.jsonl`);
         }
 

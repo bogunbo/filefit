@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OmniOpti — File Optimizer</title>
+    <title>FileFit — File Optimizer</title>
     <meta name="description" content="Compress images, video, audio, PDFs, Blender files and more — 100% in your browser.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -130,7 +130,7 @@
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/30 flex-shrink-0">
                     <i class="fa-solid fa-bolt text-sm"></i>
                 </div>
-                <span class="text-sm font-semibold text-white">OmniOpti</span>
+                <span class="text-sm font-semibold text-white">FileFit</span>
                 <span id="testBadge" class="hidden text-[10px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.5 rounded">TEST MODE</span>
                 <span class="hidden md:inline-flex items-center gap-1.5 text-[11px] text-slate-500 ml-2">
                     <i class="fa-solid fa-shield-halved text-emerald-400/80"></i> Files never leave your browser
@@ -266,7 +266,7 @@
 
     <script>
         // =====================================================================
-        //  OmniOpti — real, 100% client-side optimization engine
+        //  FileFit — real, 100% client-side optimization engine
         // =====================================================================
 
         // ---------- State ----------
@@ -673,7 +673,7 @@
 
         function exportDiagLog() {
             const blob = new Blob([localLog.map(e => JSON.stringify(e)).join('\n') + '\n'], { type: 'application/x-ndjson' });
-            triggerDownload(blob, `omniopti-log-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.jsonl`);
+            triggerDownload(blob, `filefit-log-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.jsonl`);
         }
 
         // ---------- Helpers ----------
@@ -1565,7 +1565,7 @@
 
             const buf = new ArrayBuffer(84 + tris.length * 50);
             const dv = new DataView(buf);
-            const header = 'Binary STL converted by OmniOpti';
+            const header = 'Binary STL converted by FileFit';
             for (let i = 0; i < header.length; i++) dv.setUint8(i, header.charCodeAt(i));
             dv.setUint32(80, tris.length, true);
             tris.forEach((t, i) => {
@@ -2111,7 +2111,7 @@
             const resized = ow !== width;
             setProgress.log(`hdr ${width}x${height}${resized ? ` → ${ow}x${oh}` : ''}, first scanline ${bytes[pos] === 2 && bytes[pos + 1] === 2 ? 'RLE' : 'flat'}`);
 
-            const header2 = header.replace(/^(SOFTWARE|# ?Made with|# ?Created).*\n?/gmi, '') + '\nSOFTWARE=OmniOpti';
+            const header2 = header.replace(/^(SOFTWARE|# ?Made with|# ?Created).*\n?/gmi, '') + '\nSOFTWARE=FileFit';
             const chunks = [new TextEncoder().encode(`${header2}\n\n${m[1]}Y ${oh} ${m[3]}X ${ow}\n`)];
 
             const row = new Uint8Array(width * 4);
@@ -2639,7 +2639,7 @@
             });
 
             const content = await zip.generateAsync({ type: 'blob' });
-            triggerDownload(content, `OmniOpti_${new Date().toISOString().slice(0, 10)}.zip`);
+            triggerDownload(content, `FileFit_${new Date().toISOString().slice(0, 10)}.zip`);
         }
 
         function resetFile(id) {

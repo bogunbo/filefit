@@ -1,4 +1,4 @@
-# OmniOpti — browser file optimizer
+# FileFit — browser file optimizer
 
 Live: https://filefit.me/
 
