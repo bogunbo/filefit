@@ -1,0 +1,492 @@
+{
+  "url": "https://filefit.me/index.html?test&selftest&v=1791280636418",
+  "when": "2026-10-06T09:57:51.852Z",
+  "seconds": 27,
+  "env": {
+    "version": "4.1",
+    "browser": "Chrome 154 / Linux",
+    "caps": {
+      "webcodecs": true,
+      "audioDecoder": true,
+      "compressionStream": true,
+      "wasm": true,
+      "cores": 2,
+      "memoryGB": 8,
+      "h264Encode": true,
+      "h264Decode": true,
+      "aacEncode": false
+    }
+  },
+  "counts": {
+    "done": 35,
+    "skipped": 2
+  },
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 ()"
+  ],
+  "results": [
+    {
+      "name": "alpha.png",
+      "ext": "png",
+      "status": "done",
+      "size": 291467,
+      "outSize": 37124,
+      "outName": "alpha.webp",
+      "note": "",
+      "trace": [
+        "handler: Photos & images"
+      ]
+    },
+    {
+      "name": "anim.webp",
+      "ext": "webp",
+      "status": "skipped",
+      "size": 66156,
+      "outSize": null,
+      "outName": "anim.webp",
+      "note": "Animated image — kept original so the animation survives",
+      "trace": [
+        "handler: Photos & images"
+      ]
+    },
+    {
+      "name": "app.js",
+      "ext": "js",
+      "status": "done",
+      "size": 5070,
+      "outSize": 1950,
+      "outName": "app.js",
+      "note": "",
+      "trace": [
+        "handler: Web code"
+      ]
+    },
+    {
+      "name": "ascii.stl",
+      "ext": "stl",
+      "status": "done",
+      "size": 908844,
+      "outSize": 180084,
+      "outName": "ascii.stl",
+      "note": "ASCII → binary STL",
+      "trace": [
+        "handler: 3D meshes"
+      ]
+    },
+    {
+      "name": "bigint.json",
+      "ext": "json",
+      "status": "done",
+      "size": 77,
+      "outSize": 59,
+      "outName": "bigint.json",
+      "note": "",
+      "trace": [
+        "handler: Data & markup"
+      ]
+    },
+    {
+      "name": "book.epub",
+      "ext": "epub",
+      "status": "done",
+      "size": 913433,
+      "outSize": 625008,
+      "outName": "book.epub",
+      "note": "",
+      "trace": [
+        "handler: E-books & comics"
+      ]
+    },
+    {
+      "name": "bundle.tar",
+      "ext": "tar",
+      "status": "done",
+      "size": 1259520,
+      "outSize": 96526,
+      "outName": "bundle.tar.gz",
+      "note": "Packed as .tar.gz",
+      "trace": [
+        "handler: Archives"
+      ]
+    },
+    {
+      "name": "clip.flv",
+      "ext": "flv",
+      "status": "done",
+      "size": 1383319,
+      "outSize": 205066,
+      "outName": "clip.mp4",
+      "note": "Converted FLV → MP4.",
+      "trace": [
+        "handler: Video — legacy & camera formats",
+        "engine: ffmpeg (legacy format)"
+      ]
+    },
+    {
+      "name": "clip.mp4",
+      "ext": "mp4",
+      "status": "done",
+      "size": 6173390,
+      "outSize": 1680843,
+      "outName": "clip.mp4",
+      "note": "",
+      "trace": [
+        "handler: Video",
+        "engine: webcodecs",
+        "video avc 1920x1080 → avc"
+      ]
+    },
+    {
+      "name": "clip.webm",
+      "ext": "webm",
+      "status": "done",
+      "size": 1715885,
+      "outSize": 610658,
+      "outName": "clip.mp4",
+      "note": "",
+      "trace": [
+        "handler: Video",
+        "engine: webcodecs",
+        "video vp9 1280x720 → avc"
+      ]
+    },
+    {
+      "name": "clip.wmv",
+      "ext": "wmv",
+      "status": "done",
+      "size": 1514513,
+      "outSize": 199761,
+      "outName": "clip.mp4",
+      "note": "Converted WMV → MP4.",
+      "trace": [
+        "handler: Video — legacy & camera formats",
+        "engine: ffmpeg (legacy format)"
+      ]
+    },
+    {
+      "name": "cmyk_jpeg.pdf",
+      "ext": "pdf",
+      "status": "done",
+      "size": 2439873,
+      "outSize": 98704,
+      "outName": "cmyk_jpeg.pdf",
+      "note": "",
+      "trace": [
+        "handler: PDF",
+        "ghostscript rc=0 out=99554"
+      ]
+    },
+    {
+      "name": "comments.css",
+      "ext": "css",
+      "status": "done",
+      "size": 71,
+      "outSize": 34,
+      "outName": "comments.css",
+      "note": "",
+      "trace": [
+        "handler: Web code"
+      ]
+    },
+    {
+      "name": "compact.svg",
+      "ext": "svg",
+      "status": "done",
+      "size": 8132,
+      "outSize": 342,
+      "outName": "compact.svg",
+      "note": "",
+      "trace": [
+        "handler: Vector graphics"
+      ]
+    },
+    {
+      "name": "config.glb",
+      "ext": "glb",
+      "status": "done",
+      "size": 2900052,
+      "outSize": 1450424,
+      "outName": "config.glb",
+      "note": "",
+      "trace": [
+        "handler: 3D models — glTF binary"
+      ]
+    },
+    {
+      "name": "data.json",
+      "ext": "json",
+      "status": "done",
+      "size": 36409,
+      "outSize": 13397,
+      "outName": "data.json",
+      "note": "",
+      "trace": [
+        "handler: Data & markup"
+      ]
+    },
+    {
+      "name": "doc.pdf",
+      "ext": "pdf",
+      "status": "done",
+      "size": 912531,
+      "outSize": 86555,
+      "outName": "doc.pdf",
+      "note": "",
+      "trace": [
+        "handler: PDF",
+        "ghostscript rc=0 out=87528"
+      ]
+    },
+    {
+      "name": "edge.css",
+      "ext": "css",
+      "status": "done",
+      "size": 152,
+      "outSize": 121,
+      "outName": "edge.css",
+      "note": "",
+      "trace": [
+        "handler: Web code"
+      ]
+    },
+    {
+      "name": "edge.html",
+      "ext": "html",
+      "status": "done",
+      "size": 104,
+      "outSize": 99,
+      "outName": "edge.html",
+      "note": "",
+      "trace": [
+        "handler: Web code"
+      ]
+    },
+    {
+      "name": "font.ttf",
+      "ext": "ttf",
+      "status": "done",
+      "size": 759720,
+      "outSize": 258824,
+      "outName": "font.woff2",
+      "note": "Converted to WOFF2 web font",
+      "trace": [
+        "handler: Fonts"
+      ]
+    },
+    {
+      "name": "form.pdf",
+      "ext": "pdf",
+      "status": "done",
+      "size": 1110639,
+      "outSize": 250071,
+      "outName": "form.pdf",
+      "note": "1 image(s) recompressed · form fields preserved",
+      "trace": [
+        "handler: PDF",
+        "form fields detected → pdf-lib only",
+        "pdf-lib pass"
+      ]
+    },
+    {
+      "name": "icon.svg",
+      "ext": "svg",
+      "status": "done",
+      "size": 8092,
+      "outSize": 186,
+      "outName": "icon.svg",
+      "note": "",
+      "trace": [
+        "handler: Vector graphics"
+      ]
+    },
+    {
+      "name": "mesh.obj",
+      "ext": "obj",
+      "status": "done",
+      "size": 340477,
+      "outSize": 310460,
+      "outName": "mesh.obj",
+      "note": "Coordinates rounded to 5 decimals",
+      "trace": [
+        "handler: 3D meshes"
+      ]
+    },
+    {
+      "name": "office_export.pdf",
+      "ext": "pdf",
+      "status": "done",
+      "size": 281414,
+      "outSize": 72535,
+      "outName": "office_export.pdf",
+      "note": "",
+      "trace": [
+        "handler: PDF",
+        "ghostscript rc=0 out=74820"
+      ]
+    },
+    {
+      "name": "old.avi",
+      "ext": "avi",
+      "status": "done",
+      "size": 132862,
+      "outSize": 58088,
+      "outName": "old.mp4",
+      "note": "Converted AVI → MP4.",
+      "trace": [
+        "handler: Video — legacy & camera formats",
+        "engine: ffmpeg (legacy format)"
+      ]
+    },
+    {
+      "name": "photo.jpg",
+      "ext": "jpg",
+      "status": "done",
+      "size": 891140,
+      "outSize": 146490,
+      "outName": "photo.webp",
+      "note": "",
+      "trace": [
+        "handler: Photos & images"
+      ]
+    },
+    {
+      "name": "report.docx",
+      "ext": "docx",
+      "status": "done",
+      "size": 942093,
+      "outSize": 250445,
+      "outName": "report.docx",
+      "note": "1 embedded image(s) recompressed",
+      "trace": [
+        "handler: Microsoft Office & OpenDocument"
+      ]
+    },
+    {
+      "name": "scene.blend",
+      "ext": "blend",
+      "status": "done",
+      "size": 165012,
+      "outSize": 5606,
+      "outName": "scene.blend",
+      "note": "Gzip-compressed — opens directly in Blender",
+      "trace": [
+        "handler: Blender"
+      ]
+    },
+    {
+      "name": "shot.png",
+      "ext": "png",
+      "status": "done",
+      "size": 269633,
+      "outSize": 53854,
+      "outName": "shot.webp",
+      "note": "",
+      "trace": [
+        "handler: Photos & images"
+      ]
+    },
+    {
+      "name": "signed.pdf",
+      "ext": "pdf",
+      "status": "skipped",
+      "size": 912606,
+      "outSize": null,
+      "outName": "signed.pdf",
+      "note": "Digitally signed PDF — kept original so the signature stays valid",
+      "trace": [
+        "handler: PDF"
+      ]
+    },
+    {
+      "name": "small.bmp",
+      "ext": "bmp",
+      "status": "done",
+      "size": 360054,
+      "outSize": 18680,
+      "outName": "small.webp",
+      "note": "",
+      "trace": [
+        "handler: Photos & images"
+      ]
+    },
+    {
+      "name": "song.m4a",
+      "ext": "m4a",
+      "status": "done",
+      "size": 171995,
+      "outSize": 97122,
+      "outName": "song.mp3",
+      "note": "Converted M4A → MP3 128 kbps.",
+      "trace": [
+        "handler: Audio",
+        "engine: webcodecs"
+      ]
+    },
+    {
+      "name": "song.mp3",
+      "ext": "mp3",
+      "status": "done",
+      "size": 248262,
+      "outSize": 97122,
+      "outName": "song.mp3",
+      "note": "",
+      "trace": [
+        "handler: Audio",
+        "engine: webcodecs"
+      ]
+    },
+    {
+      "name": "song.wav",
+      "ext": "wav",
+      "status": "done",
+      "size": 1064244,
+      "outSize": 96704,
+      "outName": "song.mp3",
+      "note": "Converted WAV → MP3 128 kbps.",
+      "trace": [
+        "handler: Audio",
+        "engine: webcodecs"
+      ]
+    },
+    {
+      "name": "text_fonts.pdf",
+      "ext": "pdf",
+      "status": "done",
+      "size": 41790,
+      "outSize": 35794,
+      "outName": "text_fonts.pdf",
+      "note": "",
+      "trace": [
+        "handler: PDF",
+        "ghostscript rc=0 out=34781",
+        "text layer repaired on 1 font(s)",
+        "pdf-lib pass"
+      ]
+    },
+    {
+      "name": "tone.wma",
+      "ext": "wma",
+      "status": "done",
+      "size": 173344,
+      "outSize": 80710,
+      "outName": "tone.mp3",
+      "note": "Converted WMA → MP3 128 kbps.",
+      "trace": [
+        "handler: Audio — legacy formats",
+        "engine: ffmpeg (legacy format)"
+      ]
+    },
+    {
+      "name": "track.gpx",
+      "ext": "gpx",
+      "status": "done",
+      "size": 211925,
+      "outSize": 178922,
+      "outName": "track.gpx",
+      "note": "",
+      "trace": [
+        "handler: Data & markup"
+      ]
+    }
+  ]
+}
