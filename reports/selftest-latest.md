@@ -1,8 +1,8 @@
-# Self-test — 2026-10-06T09:57:51.852Z
+# Self-test — 2026-10-06T12:15:51.402Z
 
 **Chrome 154 / Linux** · app v4.1 · 27s · ✅ done: 35 · ⚪ skipped: 2
 
-Capabilities: `{"webcodecs":true,"audioDecoder":true,"compressionStream":true,"wasm":true,"cores":2,"memoryGB":8,"h264Encode":true,"h264Decode":true,"aacEncode":false}`
+Capabilities: `{"webcodecs":true,"audioDecoder":true,"compressionStream":true,"wasm":true,"cores":4,"memoryGB":16,"h264Encode":true,"h264Decode":true,"aacEncode":false}`
 
 | | File | Before | After | Saved | Note / trace |
 |---|---|---|---|---|---|
