@@ -1,0 +1,795 @@
+{
+    "days": 30,
+    "files": 136,
+    "byExt": {
+        "avi": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 166.8999999999999772626324556767940521240234375,
+            "ms": 1454,
+            "notes": [],
+            "cat": "video"
+        },
+        "blend": {
+            "n": 5,
+            "done": 3,
+            "skipped": 2,
+            "error": 0,
+            "saved": 289.799999999999954525264911353588104248046875,
+            "ms": 63,
+            "notes": {
+                ".blend is already compressed (Zstd)": 2
+            },
+            "cat": "3d"
+        },
+        "bmp": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 284.3999999999999772626324556767940521240234375,
+            "ms": 213,
+            "notes": [],
+            "cat": "image"
+        },
+        "css": {
+            "n": 6,
+            "done": 6,
+            "skipped": 0,
+            "error": 0,
+            "saved": 217.5,
+            "ms": 85,
+            "notes": [],
+            "cat": "code"
+        },
+        "docx": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 220.200000000000017053025658242404460906982421875,
+            "ms": 922,
+            "notes": [],
+            "cat": "document"
+        },
+        "epub": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 94.80000000000001136868377216160297393798828125,
+            "ms": 724,
+            "notes": [],
+            "cat": "document"
+        },
+        "fbx": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 9.0999999999999996447286321199499070644378662109375,
+            "ms": 7790,
+            "notes": [],
+            "cat": "3d"
+        },
+        "flv": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 255.6000000000000227373675443232059478759765625,
+            "ms": 16548,
+            "notes": [],
+            "cat": "video"
+        },
+        "glb": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 150,
+            "ms": 5979,
+            "notes": [],
+            "cat": "3d"
+        },
+        "gltf": {
+            "n": 1,
+            "done": 1,
+            "skipped": 0,
+            "error": 0,
+            "saved": 40.7999999999999971578290569595992565155029296875,
+            "ms": 4240,
+            "notes": [],
+            "cat": "3d"
+        },
+        "gpx": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 46.7999999999999971578290569595992565155029296875,
+            "ms": 59,
+            "notes": [],
+            "cat": "code"
+        },
+        "hdr": {
+            "n": 2,
+            "done": 1,
+            "skipped": 1,
+            "error": 0,
+            "saved": 33.39999999999999857891452847979962825775146484375,
+            "ms": 145,
+            "notes": {
+                "Already RLE-compressed and ≤ #px wide — kept original. Use Aggressive or “Downscale” to shrink it further": 1
+            },
+            "cat": "3d"
+        },
+        "html": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 14.39999999999999857891452847979962825775146484375,
+            "ms": 97,
+            "notes": [],
+            "cat": "code"
+        },
+        "jfif": {
+            "n": 1,
+            "done": 1,
+            "skipped": 0,
+            "error": 0,
+            "saved": 91.5,
+            "ms": 752,
+            "notes": [],
+            "cat": "image"
+        },
+        "jpg": {
+            "n": 6,
+            "done": 6,
+            "skipped": 0,
+            "error": 0,
+            "saved": 515.1000000000000227373675443232059478759765625,
+            "ms": 8942,
+            "notes": [],
+            "cat": "image"
+        },
+        "js": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 184.5,
+            "ms": 5679,
+            "notes": [],
+            "cat": "code"
+        },
+        "json": {
+            "n": 6,
+            "done": 6,
+            "skipped": 0,
+            "error": 0,
+            "saved": 259.80000000000001136868377216160297393798828125,
+            "ms": 160,
+            "notes": [],
+            "cat": "code"
+        },
+        "m4a": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 128.5,
+            "ms": 2268,
+            "notes": [],
+            "cat": "audio"
+        },
+        "mov": {
+            "n": 1,
+            "done": 1,
+            "skipped": 0,
+            "error": 0,
+            "saved": 60.2999999999999971578290569595992565155029296875,
+            "ms": 5648,
+            "notes": [],
+            "cat": "video"
+        },
+        "mp3": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 181.69999999999998863131622783839702606201171875,
+            "ms": 3692,
+            "notes": [],
+            "cat": "audio"
+        },
+        "mp4": {
+            "n": 7,
+            "done": 7,
+            "skipped": 0,
+            "error": 0,
+            "saved": 547.6000000000000227373675443232059478759765625,
+            "ms": 64153,
+            "notes": [],
+            "cat": "video"
+        },
+        "obj": {
+            "n": 5,
+            "done": 5,
+            "skipped": 0,
+            "error": 0,
+            "saved": 50.599999999999994315658113919198513031005859375,
+            "ms": 16093,
+            "notes": [],
+            "cat": "3d"
+        },
+        "pdf": {
+            "n": 18,
+            "done": 15,
+            "skipped": 3,
+            "error": 0,
+            "saved": 1057.5,
+            "ms": 33435,
+            "notes": {
+                "Digitally signed PDF — kept original so the signature stays valid": 3
+            },
+            "cat": "document"
+        },
+        "ply": {
+            "n": 1,
+            "done": 1,
+            "skipped": 0,
+            "error": 0,
+            "saved": 27.39999999999999857891452847979962825775146484375,
+            "ms": 22,
+            "notes": [],
+            "cat": "3d"
+        },
+        "png": {
+            "n": 8,
+            "done": 8,
+            "skipped": 0,
+            "error": 0,
+            "saved": 697.1000000000000227373675443232059478759765625,
+            "ms": 5900,
+            "notes": [],
+            "cat": "image"
+        },
+        "stl": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 322.700000000000045474735088646411895751953125,
+            "ms": 210,
+            "notes": [],
+            "cat": "3d"
+        },
+        "stp": {
+            "n": 1,
+            "done": 1,
+            "skipped": 0,
+            "error": 0,
+            "saved": 6.0999999999999996447286321199499070644378662109375,
+            "ms": 16,
+            "notes": [],
+            "cat": "3d"
+        },
+        "svg": {
+            "n": 6,
+            "done": 6,
+            "skipped": 0,
+            "error": 0,
+            "saved": 458.40000000000003410605131648480892181396484375,
+            "ms": 123,
+            "notes": [],
+            "cat": "image"
+        },
+        "tar": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 276.8999999999999772626324556767940521240234375,
+            "ms": 400,
+            "notes": [],
+            "cat": "archive"
+        },
+        "ttf": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 197.700000000000017053025658242404460906982421875,
+            "ms": 9500,
+            "notes": [],
+            "cat": "font"
+        },
+        "wav": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 364.3999999999999772626324556767940521240234375,
+            "ms": 5275,
+            "notes": [],
+            "cat": "audio"
+        },
+        "webm": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 193.30000000000001136868377216160297393798828125,
+            "ms": 20472,
+            "notes": [],
+            "cat": "video"
+        },
+        "webp": {
+            "n": 3,
+            "done": 0,
+            "skipped": 3,
+            "error": 0,
+            "saved": 0,
+            "ms": 0,
+            "notes": {
+                "Animated image — kept original so the animation survives": 3
+            },
+            "cat": "image"
+        },
+        "wma": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 160.19999999999998863131622783839702606201171875,
+            "ms": 1821,
+            "notes": [],
+            "cat": "audio"
+        },
+        "wmv": {
+            "n": 3,
+            "done": 3,
+            "skipped": 0,
+            "error": 0,
+            "saved": 260.3999999999999772626324556767940521240234375,
+            "ms": 10007,
+            "notes": [],
+            "cat": "video"
+        }
+    },
+    "browsers": {
+        "Chrome 154 / Windows": {
+            "done": 9,
+            "skipped": 2
+        },
+        "Chrome 154 / Android": {
+            "done": 4
+        },
+        "Chrome 154 / Linux": {
+            "skipped": 7,
+            "done": 114
+        }
+    },
+    "problems": [
+        {
+            "st": "2026-10-06T12:45:56+00:00",
+            "ip": "0c024e5cfd",
+            "t": "2026-10-06T12:45:54.157Z",
+            "v": "4.2",
+            "sid": "s0jg5fb7",
+            "test": true,
+            "type": "file",
+            "name": "signed.pdf",
+            "ext": "pdf",
+            "cat": "document",
+            "size": 912606,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": "Digitally signed PDF — kept original so the signature stays valid",
+            "ms": 45,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: PDF"
+            ],
+            "browser": "Chrome 154 / Linux"
+        },
+        {
+            "st": "2026-10-06T12:45:56+00:00",
+            "ip": "0c024e5cfd",
+            "t": "2026-10-06T12:45:53.581Z",
+            "v": "4.2",
+            "sid": "s0jg5fb7",
+            "test": true,
+            "type": "file",
+            "name": "memorial.hdr",
+            "ext": "hdr",
+            "cat": "3d",
+            "size": 1343485,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": "Already RLE-compressed and ≤ 4096px wide — kept original. Use Aggressive or “Downscale” to shrink it further",
+            "ms": 3927,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: HDR environment maps",
+                "hdr 512x768, first scanline RLE"
+            ],
+            "browser": "Chrome 154 / Linux"
+        },
+        {
+            "st": "2026-10-06T12:45:30+00:00",
+            "ip": "0c024e5cfd",
+            "t": "2026-10-06T12:45:26.483Z",
+            "v": "4.2",
+            "sid": "s0jg5fb7",
+            "test": true,
+            "type": "file",
+            "name": "anim.webp",
+            "ext": "webp",
+            "cat": "image",
+            "size": 60388,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": "Animated image — kept original so the animation survives",
+            "ms": 20,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: Photos & images"
+            ],
+            "browser": "Chrome 154 / Linux"
+        },
+        {
+            "st": "2026-10-06T12:15:48+00:00",
+            "ip": "de9f9629cf",
+            "t": "2026-10-06T12:15:46.066Z",
+            "v": "4.1",
+            "sid": "624z92q0",
+            "test": true,
+            "type": "file",
+            "name": "signed.pdf",
+            "ext": "pdf",
+            "cat": "document",
+            "size": 912606,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": "Digitally signed PDF — kept original so the signature stays valid",
+            "ms": 30,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: PDF"
+            ],
+            "browser": "Chrome 154 / Linux"
+        },
+        {
+            "st": "2026-10-06T12:15:35+00:00",
+            "ip": "de9f9629cf",
+            "t": "2026-10-06T12:15:33.206Z",
+            "v": "4.1",
+            "sid": "624z92q0",
+            "test": true,
+            "type": "file",
+            "name": "anim.webp",
+            "ext": "webp",
+            "cat": "image",
+            "size": 66156,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": "Animated image — kept original so the animation survives",
+            "ms": 76,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: Photos & images"
+            ],
+            "browser": "Chrome 154 / Linux"
+        },
+        {
+            "st": "2026-10-06T09:57:48+00:00",
+            "ip": "8349abc296",
+            "t": "2026-10-06T09:57:46.500Z",
+            "v": "4.1",
+            "sid": "uw82huba",
+            "test": true,
+            "type": "file",
+            "name": "signed.pdf",
+            "ext": "pdf",
+            "cat": "document",
+            "size": 912606,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": "Digitally signed PDF — kept original so the signature stays valid",
+            "ms": 17,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: PDF"
+            ],
+            "browser": "Chrome 154 / Linux"
+        },
+        {
+            "st": "2026-10-06T09:57:36+00:00",
+            "ip": "8349abc296",
+            "t": "2026-10-06T09:57:34.287Z",
+            "v": "4.1",
+            "sid": "uw82huba",
+            "test": true,
+            "type": "file",
+            "name": "anim.webp",
+            "ext": "webp",
+            "cat": "image",
+            "size": 66156,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": "Animated image — kept original so the animation survives",
+            "ms": 116,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: Photos & images"
+            ],
+            "browser": "Chrome 154 / Linux"
+        },
+        {
+            "st": "2026-10-05T13:22:52+00:00",
+            "ip": "05ebeb8280",
+            "t": "2026-10-05T13:22:50.579Z",
+            "v": "4.1",
+            "sid": "qvcpcnqe",
+            "test": false,
+            "type": "file",
+            "ext": "blend",
+            "cat": "3d",
+            "size": 11751928,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": ".blend is already compressed (Zstd)",
+            "ms": 11,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: Blender"
+            ],
+            "browser": "Chrome 154 / Windows"
+        },
+        {
+            "st": "2026-10-05T13:22:44+00:00",
+            "ip": "05ebeb8280",
+            "t": "2026-10-05T13:22:42.478Z",
+            "v": "4.1",
+            "sid": "qvcpcnqe",
+            "test": false,
+            "type": "file",
+            "ext": "blend",
+            "cat": "3d",
+            "size": 47825355,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": ".blend is already compressed (Zstd)",
+            "ms": 9,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: Blender"
+            ],
+            "browser": "Chrome 154 / Windows"
+        }
+    ],
+    "jsErrors": [],
+    "sessions": [
+        {
+            "st": "2026-10-05T13:32:30+00:00",
+            "ip": "05ebeb8280",
+            "t": "2026-10-05T13:32:27.434Z",
+            "v": "4.1",
+            "sid": "x6etxmyb",
+            "test": false,
+            "type": "session",
+            "browser": "Chrome 154 / Windows",
+            "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+            "caps": {
+                "webcodecs": true,
+                "audioDecoder": true,
+                "compressionStream": true,
+                "wasm": true,
+                "cores": 10,
+                "memoryGB": 4,
+                "h264Encode": true,
+                "h264Decode": true,
+                "aacEncode": true
+            }
+        },
+        {
+            "st": "2026-10-05T13:36:16+00:00",
+            "ip": "65e36bb1ff",
+            "t": "2026-10-05T13:36:15.021Z",
+            "v": "4.1",
+            "sid": "o0v31ru9",
+            "test": false,
+            "type": "session",
+            "browser": "Chrome 154 / Android",
+            "ua": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+            "caps": {
+                "webcodecs": true,
+                "audioDecoder": true,
+                "compressionStream": true,
+                "wasm": true,
+                "cores": 8,
+                "memoryGB": 4,
+                "h264Encode": true,
+                "h264Decode": true,
+                "aacEncode": true
+            }
+        },
+        {
+            "st": "2026-10-06T09:57:36+00:00",
+            "ip": "8349abc296",
+            "t": "2026-10-06T09:57:34.287Z",
+            "v": "4.1",
+            "sid": "uw82huba",
+            "test": true,
+            "type": "session",
+            "browser": "Chrome 154 / Linux",
+            "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+            "caps": {
+                "webcodecs": true,
+                "audioDecoder": true,
+                "compressionStream": true,
+                "wasm": true,
+                "cores": 2,
+                "memoryGB": 8,
+                "h264Encode": true,
+                "h264Decode": true,
+                "aacEncode": false
+            }
+        },
+        {
+            "st": "2026-10-06T12:15:35+00:00",
+            "ip": "de9f9629cf",
+            "t": "2026-10-06T12:15:33.206Z",
+            "v": "4.1",
+            "sid": "624z92q0",
+            "test": true,
+            "type": "session",
+            "browser": "Chrome 154 / Linux",
+            "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+            "caps": {
+                "webcodecs": true,
+                "audioDecoder": true,
+                "compressionStream": true,
+                "wasm": true,
+                "cores": 4,
+                "memoryGB": 16,
+                "h264Encode": true,
+                "h264Decode": true,
+                "aacEncode": false
+            }
+        },
+        {
+            "st": "2026-10-06T12:45:30+00:00",
+            "ip": "0c024e5cfd",
+            "t": "2026-10-06T12:45:26.417Z",
+            "v": "4.2",
+            "sid": "s0jg5fb7",
+            "test": true,
+            "type": "session",
+            "browser": "Chrome 154 / Linux",
+            "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+            "caps": {
+                "webcodecs": true,
+                "audioDecoder": true,
+                "compressionStream": true,
+                "wasm": true,
+                "cores": 4,
+                "memoryGB": 16,
+                "h264Encode": true,
+                "h264Decode": true,
+                "aacEncode": false
+            }
+        },
+        {
+            "st": "2026-10-06T12:46:41+00:00",
+            "ip": "05ebeb8280",
+            "t": "2026-10-06T12:46:40.180Z",
+            "v": "4.2",
+            "sid": "m4h7zyau",
+            "test": false,
+            "type": "session",
+            "browser": "Chrome 154 / Windows",
+            "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+            "caps": {
+                "webcodecs": true,
+                "audioDecoder": true,
+                "compressionStream": true,
+                "wasm": true,
+                "cores": 8,
+                "memoryGB": 32,
+                "h264Encode": true,
+                "h264Decode": true,
+                "aacEncode": true
+            }
+        },
+        {
+            "st": "2026-10-06T12:56:19+00:00",
+            "ip": "05ebeb8280",
+            "t": "2026-10-06T12:56:18.334Z",
+            "v": "4.2",
+            "sid": "nhda1uqn",
+            "test": false,
+            "type": "session",
+            "browser": "Chrome 154 / Android",
+            "ua": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+            "caps": {
+                "webcodecs": true,
+                "audioDecoder": true,
+                "compressionStream": true,
+                "wasm": true,
+                "cores": 8,
+                "memoryGB": 4,
+                "h264Encode": true,
+                "h264Decode": true,
+                "aacEncode": true
+            }
+        },
+        {
+            "st": "2026-10-06T13:00:33+00:00",
+            "ip": "05ebeb8280",
+            "t": "2026-10-06T13:00:31.688Z",
+            "v": "4.2",
+            "sid": "rg8l5636",
+            "test": false,
+            "type": "session",
+            "browser": "Chrome 154 / Android",
+            "ua": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+            "caps": {
+                "webcodecs": true,
+                "audioDecoder": true,
+                "compressionStream": true,
+                "wasm": true,
+                "cores": 8,
+                "memoryGB": 4,
+                "h264Encode": true,
+                "h264Decode": true,
+                "aacEncode": true
+            }
+        },
+        {
+            "st": "2026-10-06T13:07:40+00:00",
+            "ip": "05ebeb8280",
+            "t": "2026-10-06T13:07:38.692Z",
+            "v": "4.2",
+            "sid": "5q92onpe",
+            "test": false,
+            "type": "session",
+            "browser": "Chrome 154 / Windows",
+            "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+            "caps": {
+                "webcodecs": true,
+                "audioDecoder": true,
+                "compressionStream": true,
+                "wasm": true,
+                "cores": 8,
+                "memoryGB": 32,
+                "h264Encode": true,
+                "h264Decode": true,
+                "aacEncode": true
+            }
+        }
+    ]
+}
