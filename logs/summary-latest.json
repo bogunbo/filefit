@@ -1,6 +1,6 @@
 {
     "days": 30,
-    "files": 136,
+    "files": 137,
     "byExt": {
         "avi": {
             "n": 3,
@@ -207,12 +207,12 @@
             "cat": "audio"
         },
         "mp4": {
-            "n": 7,
-            "done": 7,
+            "n": 8,
+            "done": 8,
             "skipped": 0,
             "error": 0,
-            "saved": 547.6000000000000227373675443232059478759765625,
-            "ms": 64153,
+            "saved": 627.1000000000000227373675443232059478759765625,
+            "ms": 589867,
             "notes": [],
             "cat": "video"
         },
@@ -367,7 +367,7 @@
             "skipped": 2
         },
         "Chrome 154 / Android": {
-            "done": 4
+            "done": 5
         },
         "Chrome 154 / Linux": {
             "skipped": 7,
@@ -786,6 +786,28 @@
                 "wasm": true,
                 "cores": 8,
                 "memoryGB": 32,
+                "h264Encode": true,
+                "h264Decode": true,
+                "aacEncode": true
+            }
+        },
+        {
+            "st": "2026-10-07T14:02:30+00:00",
+            "ip": "c75457567e",
+            "t": "2026-10-07T14:02:28.237Z",
+            "v": "4.2",
+            "sid": "z2xjk2yd",
+            "test": false,
+            "type": "session",
+            "browser": "Chrome 154 / Android",
+            "ua": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36",
+            "caps": {
+                "webcodecs": true,
+                "audioDecoder": true,
+                "compressionStream": true,
+                "wasm": true,
+                "cores": 8,
+                "memoryGB": 4,
                 "h264Encode": true,
                 "h264Decode": true,
                 "aacEncode": true
