@@ -1,6 +1,6 @@
-# Self-test — 2026-10-12T12:14:01.843Z
+# Self-test — 2026-10-19T10:05:39.770Z
 
-**Chrome 154 / Linux** · app v4.2 · 39s · ✅ done: 44 · ⚪ skipped: 3
+**Chrome 155 / Linux** · app v4.2 · 35s · ✅ done: 44 · ⚪ skipped: 3
 
 Capabilities: `{"webcodecs":true,"audioDecoder":true,"compressionStream":true,"wasm":true,"cores":4,"memoryGB":16,"h264Encode":true,"h264Decode":true,"aacEncode":false}`
 
@@ -18,7 +18,7 @@ Capabilities: `{"webcodecs":true,"audioDecoder":true,"compressionStream":true,"w
 | ✅ | bundle.tar | 1.20 MB | 94.3 KB | 92% | Packed as .tar.gz <br><sub>handler: Archives</sub> |
 | ✅ | clip.flv | 1.32 MB | 200.3 KB | 85% | Converted FLV → MP4. <br><sub>handler: Video — legacy & camera formats › engine: ffmpeg (legacy format)</sub> |
 | ✅ | clip.mp4 | 5.88 MB | 1.60 MB | 73% |  <br><sub>handler: Video › engine: webcodecs › video avc 1920x1080 → avc</sub> |
-| ✅ | clip.webm | 1.64 MB | 595.8 KB | 64% |  <br><sub>handler: Video › engine: webcodecs › video vp9 1280x720 → avc</sub> |
+| ✅ | clip.webm | 1.64 MB | 595.9 KB | 64% |  <br><sub>handler: Video › engine: webcodecs › video vp9 1280x720 → avc</sub> |
 | ✅ | clip.wmv | 1.44 MB | 195.1 KB | 87% | Converted WMV → MP4. <br><sub>handler: Video — legacy & camera formats › engine: ffmpeg (legacy format)</sub> |
 | ✅ | cmyk_jpeg.pdf | 2.33 MB | 96.4 KB | 96% |  <br><sub>handler: PDF › ghostscript rc=0 out=99554</sub> |
 | ✅ | comments.css | 0.1 KB | 0.0 KB | 52% |  <br><sub>handler: Web code</sub> |

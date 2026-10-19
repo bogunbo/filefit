@@ -1,10 +1,10 @@
 {
-  "url": "https://filefit.me/index.html?test&selftest&v=1791807202096",
-  "when": "2026-10-12T12:14:01.843Z",
-  "seconds": 39,
+  "url": "https://filefit.me/index.html?test&selftest&v=1792404301741",
+  "when": "2026-10-19T10:05:39.770Z",
+  "seconds": 35,
   "env": {
     "version": "4.2",
-    "browser": "Chrome 154 / Linux",
+    "browser": "Chrome 155 / Linux",
     "caps": {
       "webcodecs": true,
       "audioDecoder": true,
@@ -164,7 +164,7 @@
       "ext": "mp4",
       "status": "done",
       "size": 6167515,
-      "outSize": 1672986,
+      "outSize": 1677200,
       "outName": "clip.mp4",
       "note": "",
       "trace": [
@@ -178,7 +178,7 @@
       "ext": "webm",
       "status": "done",
       "size": 1715885,
-      "outSize": 610050,
+      "outSize": 610230,
       "outName": "clip.mp4",
       "note": "",
       "trace": [
@@ -205,7 +205,7 @@
       "ext": "pdf",
       "status": "done",
       "size": 2439873,
-      "outSize": 98703,
+      "outSize": 98704,
       "outName": "cmyk_jpeg.pdf",
       "note": "",
       "trace": [
@@ -403,7 +403,7 @@
       "ext": "pdf",
       "status": "done",
       "size": 281414,
-      "outSize": 72538,
+      "outSize": 72540,
       "outName": "office_export.pdf",
       "note": "",
       "trace": [
