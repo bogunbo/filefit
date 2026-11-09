@@ -1,340 +1,340 @@
 {
     "days": 30,
-    "files": 144,
+    "files": 191,
     "byExt": {
         "avi": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 162.8999999999999772626324556767940521240234375,
-            "ms": 1993,
-            "notes": [],
-            "cat": "video"
-        },
-        "blend": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 289.799999999999954525264911353588104248046875,
-            "ms": 88,
-            "notes": [],
-            "cat": "3d"
-        },
-        "bmp": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 284.3999999999999772626324556767940521240234375,
-            "ms": 296,
-            "notes": [],
-            "cat": "image"
-        },
-        "css": {
-            "n": 6,
-            "done": 6,
-            "skipped": 0,
-            "error": 0,
-            "saved": 217.5,
-            "ms": 168,
-            "notes": [],
-            "cat": "code"
-        },
-        "docx": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 220.200000000000017053025658242404460906982421875,
-            "ms": 1345,
-            "notes": [],
-            "cat": "document"
-        },
-        "epub": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 94.80000000000001136868377216160297393798828125,
-            "ms": 537,
-            "notes": [],
-            "cat": "document"
-        },
-        "fbx": {
-            "n": 9,
-            "done": 9,
-            "skipped": 0,
-            "error": 0,
-            "saved": 27.2999999999999971578290569595992565155029296875,
-            "ms": 26887,
-            "notes": [],
-            "cat": "3d"
-        },
-        "flv": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 255.6000000000000227373675443232059478759765625,
-            "ms": 8896,
-            "notes": [],
-            "cat": "video"
-        },
-        "glb": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 150,
-            "ms": 5458,
-            "notes": [],
-            "cat": "3d"
-        },
-        "gltf": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 122.3999999999999914734871708787977695465087890625,
-            "ms": 14026,
-            "notes": [],
-            "cat": "3d"
-        },
-        "gpx": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 46.7999999999999971578290569595992565155029296875,
-            "ms": 74,
-            "notes": [],
-            "cat": "code"
-        },
-        "hdr": {
-            "n": 6,
-            "done": 3,
-            "skipped": 3,
-            "error": 0,
-            "saved": 100.19999999999998863131622783839702606201171875,
-            "ms": 506,
-            "notes": {
-                "Already RLE-compressed and ≤ #px wide — kept original. Use Aggressive or “Downscale” to shrink it further": 3
-            },
-            "cat": "3d"
-        },
-        "html": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 14.39999999999999857891452847979962825775146484375,
-            "ms": 170,
-            "notes": [],
-            "cat": "code"
-        },
-        "jpg": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 250.5,
-            "ms": 2273,
-            "notes": [],
-            "cat": "image"
-        },
-        "js": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 184.5,
-            "ms": 1810,
-            "notes": [],
-            "cat": "code"
-        },
-        "json": {
-            "n": 6,
-            "done": 6,
-            "skipped": 0,
-            "error": 0,
-            "saved": 259.80000000000001136868377216160297393798828125,
-            "ms": 98,
-            "notes": [],
-            "cat": "code"
-        },
-        "m4a": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 124.5,
-            "ms": 2862,
-            "notes": [],
-            "cat": "audio"
-        },
-        "mp3": {
-            "n": 3,
-            "done": 3,
-            "skipped": 0,
-            "error": 0,
-            "saved": 179.69999999999998863131622783839702606201171875,
-            "ms": 4919,
-            "notes": [],
-            "cat": "audio"
-        },
-        "mp4": {
             "n": 4,
             "done": 4,
             "skipped": 0,
             "error": 0,
-            "saved": 310.8999999999999772626324556767940521240234375,
-            "ms": 22596,
+            "saved": 217.19999999999998863131622783839702606201171875,
+            "ms": 2550,
             "notes": [],
             "cat": "video"
         },
-        "obj": {
-            "n": 6,
-            "done": 6,
+        "blend": {
+            "n": 4,
+            "done": 4,
             "skipped": 0,
             "error": 0,
-            "saved": 42.900000000000005684341886080801486968994140625,
-            "ms": 428,
+            "saved": 386.3999999999999772626324556767940521240234375,
+            "ms": 105,
             "notes": [],
             "cat": "3d"
         },
-        "pdf": {
-            "n": 18,
-            "done": 15,
-            "skipped": 3,
-            "error": 0,
-            "saved": 1057.5,
-            "ms": 38973,
-            "notes": {
-                "Digitally signed PDF — kept original so the signature stays valid": 3
-            },
-            "cat": "document"
-        },
-        "ply": {
-            "n": 3,
-            "done": 3,
+        "bmp": {
+            "n": 4,
+            "done": 4,
             "skipped": 0,
             "error": 0,
-            "saved": 82.19999999999998863131622783839702606201171875,
-            "ms": 75,
+            "saved": 379.19999999999998863131622783839702606201171875,
+            "ms": 357,
             "notes": [],
-            "cat": "3d"
+            "cat": "image"
         },
-        "png": {
+        "css": {
             "n": 8,
             "done": 8,
             "skipped": 0,
             "error": 0,
-            "saved": 693.3999999999999772626324556767940521240234375,
-            "ms": 5700,
+            "saved": 290,
+            "ms": 206,
+            "notes": [],
+            "cat": "code"
+        },
+        "docx": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 293.6000000000000227373675443232059478759765625,
+            "ms": 1869,
+            "notes": [],
+            "cat": "document"
+        },
+        "epub": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 126.400000000000005684341886080801486968994140625,
+            "ms": 759,
+            "notes": [],
+            "cat": "document"
+        },
+        "fbx": {
+            "n": 12,
+            "done": 12,
+            "skipped": 0,
+            "error": 0,
+            "saved": 36.39999999999999857891452847979962825775146484375,
+            "ms": 35894,
+            "notes": [],
+            "cat": "3d"
+        },
+        "flv": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 340.80000000000001136868377216160297393798828125,
+            "ms": 12570,
+            "notes": [],
+            "cat": "video"
+        },
+        "glb": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 200,
+            "ms": 7834,
+            "notes": [],
+            "cat": "3d"
+        },
+        "gltf": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 163.19999999999998863131622783839702606201171875,
+            "ms": 18657,
+            "notes": [],
+            "cat": "3d"
+        },
+        "gpx": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 62.39999999999999857891452847979962825775146484375,
+            "ms": 116,
+            "notes": [],
+            "cat": "code"
+        },
+        "hdr": {
+            "n": 8,
+            "done": 4,
+            "skipped": 4,
+            "error": 0,
+            "saved": 133.599999999999994315658113919198513031005859375,
+            "ms": 679,
+            "notes": {
+                "Already RLE-compressed and ≤ #px wide — kept original. Use Aggressive or “Downscale” to shrink it further": 4
+            },
+            "cat": "3d"
+        },
+        "html": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 19.199999999999999289457264239899814128875732421875,
+            "ms": 193,
+            "notes": [],
+            "cat": "code"
+        },
+        "jpg": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 334,
+            "ms": 2978,
+            "notes": [],
+            "cat": "image"
+        },
+        "js": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 246,
+            "ms": 2590,
+            "notes": [],
+            "cat": "code"
+        },
+        "json": {
+            "n": 8,
+            "done": 8,
+            "skipped": 0,
+            "error": 0,
+            "saved": 346.3999999999999772626324556767940521240234375,
+            "ms": 142,
+            "notes": [],
+            "cat": "code"
+        },
+        "m4a": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 166,
+            "ms": 3994,
+            "notes": [],
+            "cat": "audio"
+        },
+        "mp3": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 239.599999999999994315658113919198513031005859375,
+            "ms": 6721,
+            "notes": [],
+            "cat": "audio"
+        },
+        "mp4": {
+            "n": 5,
+            "done": 5,
+            "skipped": 0,
+            "error": 0,
+            "saved": 383.69999999999998863131622783839702606201171875,
+            "ms": 28032,
+            "notes": [],
+            "cat": "video"
+        },
+        "obj": {
+            "n": 8,
+            "done": 8,
+            "skipped": 0,
+            "error": 0,
+            "saved": 57.2000000000000028421709430404007434844970703125,
+            "ms": 537,
+            "notes": [],
+            "cat": "3d"
+        },
+        "pdf": {
+            "n": 24,
+            "done": 20,
+            "skipped": 4,
+            "error": 0,
+            "saved": 1410,
+            "ms": 56803,
+            "notes": {
+                "Digitally signed PDF — kept original so the signature stays valid": 4
+            },
+            "cat": "document"
+        },
+        "ply": {
+            "n": 4,
+            "done": 4,
+            "skipped": 0,
+            "error": 0,
+            "saved": 109.599999999999994315658113919198513031005859375,
+            "ms": 118,
+            "notes": [],
+            "cat": "3d"
+        },
+        "png": {
+            "n": 10,
+            "done": 10,
+            "skipped": 0,
+            "error": 0,
+            "saved": 860,
+            "ms": 6015,
             "notes": [],
             "cat": "image"
         },
         "stl": {
-            "n": 6,
-            "done": 6,
+            "n": 8,
+            "done": 8,
             "skipped": 0,
             "error": 0,
-            "saved": 486.8999999999999772626324556767940521240234375,
-            "ms": 204,
+            "saved": 649.200000000000045474735088646411895751953125,
+            "ms": 247,
             "notes": [],
             "cat": "3d"
         },
         "stp": {
-            "n": 3,
-            "done": 3,
+            "n": 4,
+            "done": 4,
             "skipped": 0,
             "error": 0,
-            "saved": 18.2999999999999971578290569595992565155029296875,
-            "ms": 59,
+            "saved": 24.39999999999999857891452847979962825775146484375,
+            "ms": 81,
             "notes": [],
             "cat": "3d"
         },
         "svg": {
-            "n": 6,
-            "done": 6,
+            "n": 8,
+            "done": 8,
             "skipped": 0,
             "error": 0,
-            "saved": 214.19999999999998863131622783839702606201171875,
-            "ms": 3735,
+            "saved": 285.59999999999996589394868351519107818603515625,
+            "ms": 3869,
             "notes": [],
             "cat": "image"
         },
         "tar": {
-            "n": 3,
-            "done": 3,
+            "n": 4,
+            "done": 4,
             "skipped": 0,
             "error": 0,
-            "saved": 276.8999999999999772626324556767940521240234375,
-            "ms": 133,
+            "saved": 369.19999999999998863131622783839702606201171875,
+            "ms": 179,
             "notes": [],
             "cat": "archive"
         },
         "ttf": {
-            "n": 3,
-            "done": 3,
+            "n": 4,
+            "done": 4,
             "skipped": 0,
             "error": 0,
-            "saved": 197.700000000000017053025658242404460906982421875,
-            "ms": 11131,
+            "saved": 263.6000000000000227373675443232059478759765625,
+            "ms": 15334,
             "notes": [],
             "cat": "font"
         },
         "wav": {
-            "n": 3,
-            "done": 3,
+            "n": 4,
+            "done": 4,
             "skipped": 0,
             "error": 0,
-            "saved": 272.700000000000045474735088646411895751953125,
-            "ms": 6267,
+            "saved": 363.6000000000000227373675443232059478759765625,
+            "ms": 8541,
             "notes": [],
             "cat": "audio"
         },
         "webm": {
-            "n": 3,
-            "done": 3,
+            "n": 4,
+            "done": 4,
             "skipped": 0,
             "error": 0,
-            "saved": 193.30000000000001136868377216160297393798828125,
-            "ms": 14527,
+            "saved": 257.700000000000045474735088646411895751953125,
+            "ms": 20323,
             "notes": [],
             "cat": "video"
         },
         "webp": {
-            "n": 3,
+            "n": 4,
             "done": 0,
-            "skipped": 3,
+            "skipped": 4,
             "error": 0,
             "saved": 0,
             "ms": 0,
             "notes": {
-                "Animated image — kept original so the animation survives": 3
+                "Animated image — kept original so the animation survives": 4
             },
             "cat": "image"
         },
         "wma": {
-            "n": 3,
-            "done": 3,
+            "n": 4,
+            "done": 4,
             "skipped": 0,
             "error": 0,
-            "saved": 160.19999999999998863131622783839702606201171875,
-            "ms": 2968,
+            "saved": 213.599999999999994315658113919198513031005859375,
+            "ms": 4013,
             "notes": [],
             "cat": "audio"
         },
         "wmv": {
-            "n": 3,
-            "done": 3,
+            "n": 4,
+            "done": 4,
             "skipped": 0,
             "error": 0,
-            "saved": 260.3999999999999772626324556767940521240234375,
-            "ms": 12229,
+            "saved": 347.19999999999998863131622783839702606201171875,
+            "ms": 17227,
             "notes": [],
             "cat": "video"
         }
@@ -350,9 +350,86 @@
         "Chrome 155 / Linux": {
             "done": 88,
             "skipped": 6
+        },
+        "Chrome 156 / Linux": {
+            "done": 44,
+            "skipped": 3
         }
     },
     "problems": [
+        {
+            "st": "2026-11-09T13:06:44+00:00",
+            "ip": "ad6000e1e6",
+            "t": "2026-11-09T13:06:41.456Z",
+            "v": "4.2",
+            "sid": "dfdbw0f0",
+            "test": true,
+            "type": "file",
+            "name": "signed.pdf",
+            "ext": "pdf",
+            "cat": "document",
+            "size": 912606,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": "Digitally signed PDF — kept original so the signature stays valid",
+            "ms": 34,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: PDF"
+            ],
+            "browser": "Chrome 156 / Linux"
+        },
+        {
+            "st": "2026-11-09T13:06:44+00:00",
+            "ip": "ad6000e1e6",
+            "t": "2026-11-09T13:06:40.687Z",
+            "v": "4.2",
+            "sid": "dfdbw0f0",
+            "test": true,
+            "type": "file",
+            "name": "memorial.hdr",
+            "ext": "hdr",
+            "cat": "3d",
+            "size": 1343485,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": "Already RLE-compressed and ≤ 4096px wide — kept original. Use Aggressive or “Downscale” to shrink it further",
+            "ms": 4628,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: HDR environment maps",
+                "hdr 512x768, first scanline RLE"
+            ],
+            "browser": "Chrome 156 / Linux"
+        },
+        {
+            "st": "2026-11-09T13:06:24+00:00",
+            "ip": "ad6000e1e6",
+            "t": "2026-11-09T13:06:22.393Z",
+            "v": "4.2",
+            "sid": "dfdbw0f0",
+            "test": true,
+            "type": "file",
+            "name": "anim.webp",
+            "ext": "webp",
+            "cat": "image",
+            "size": 60388,
+            "outSize": null,
+            "saved": 0,
+            "status": "skipped",
+            "note": "Animated image — kept original so the animation survives",
+            "ms": 4231,
+            "preset": "balanced",
+            "opts": "meta,webp,media,pack",
+            "trace": [
+                "handler: Photos & images"
+            ],
+            "browser": "Chrome 156 / Linux"
+        },
         {
             "st": "2026-10-26T10:19:56+00:00",
             "ip": "670da13b39",
@@ -673,6 +750,28 @@
             "type": "session",
             "browser": "Chrome 155 / Linux",
             "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+            "caps": {
+                "webcodecs": true,
+                "audioDecoder": true,
+                "compressionStream": true,
+                "wasm": true,
+                "cores": 4,
+                "memoryGB": 16,
+                "h264Encode": true,
+                "h264Decode": true,
+                "aacEncode": false
+            }
+        },
+        {
+            "st": "2026-11-09T13:06:24+00:00",
+            "ip": "ad6000e1e6",
+            "t": "2026-11-09T13:06:18.064Z",
+            "v": "4.2",
+            "sid": "dfdbw0f0",
+            "test": true,
+            "type": "session",
+            "browser": "Chrome 156 / Linux",
+            "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36",
             "caps": {
                 "webcodecs": true,
                 "audioDecoder": true,
