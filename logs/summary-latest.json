@@ -1,6 +1,6 @@
 {
     "days": 30,
-    "files": 144,
+    "files": 143,
     "byExt": {
         "avi": {
             "n": 3,
@@ -185,12 +185,12 @@
             "cat": "audio"
         },
         "mp4": {
-            "n": 4,
-            "done": 4,
+            "n": 3,
+            "done": 3,
             "skipped": 0,
             "error": 0,
-            "saved": 310.80000000000001136868377216160297393798828125,
-            "ms": 23536,
+            "saved": 218.5,
+            "ms": 14264,
             "notes": [],
             "cat": "video"
         },
@@ -341,7 +341,7 @@
     },
     "browsers": {
         "Chrome 155 / Windows": {
-            "done": 3
+            "done": 2
         },
         "Chrome 155 / Linux": {
             "done": 88,
@@ -575,28 +575,6 @@
     ],
     "jsErrors": [],
     "sessions": [
-        {
-            "st": "2026-10-15T09:23:54+00:00",
-            "ip": "05ebeb8280",
-            "t": "2026-10-15T09:23:53.399Z",
-            "v": "4.2",
-            "sid": "mkjmp1sq",
-            "test": false,
-            "type": "session",
-            "browser": "Chrome 155 / Windows",
-            "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
-            "caps": {
-                "webcodecs": true,
-                "audioDecoder": true,
-                "compressionStream": true,
-                "wasm": true,
-                "cores": 8,
-                "memoryGB": 32,
-                "h264Encode": true,
-                "h264Decode": true,
-                "aacEncode": true
-            }
-        },
         {
             "st": "2026-10-16T09:34:12+00:00",
             "ip": "05ebeb8280",
