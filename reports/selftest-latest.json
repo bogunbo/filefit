@@ -1,10 +1,10 @@
 {
-  "url": "https://filefit.me/index.html?test&selftest&v=1794229567781",
-  "when": "2026-11-09T13:06:47.457Z",
-  "seconds": 38,
+  "url": "https://filefit.me/index.html?test&selftest&v=1794833872011",
+  "when": "2026-11-16T12:58:37.821Z",
+  "seconds": 30,
   "env": {
     "version": "4.2",
-    "browser": "Chrome 156 / Linux",
+    "browser": "Chrome 157 / Linux",
     "caps": {
       "webcodecs": true,
       "audioDecoder": true,
@@ -164,7 +164,7 @@
       "ext": "mp4",
       "status": "done",
       "size": 6167515,
-      "outSize": 1675590,
+      "outSize": 1676522,
       "outName": "clip.mp4",
       "note": "",
       "trace": [
@@ -178,7 +178,7 @@
       "ext": "webm",
       "status": "done",
       "size": 1715885,
-      "outSize": 610278,
+      "outSize": 611057,
       "outName": "clip.mp4",
       "note": "",
       "trace": [
@@ -266,7 +266,7 @@
       "ext": "pdf",
       "status": "done",
       "size": 912531,
-      "outSize": 86555,
+      "outSize": 86554,
       "outName": "doc.pdf",
       "note": "",
       "trace": [
